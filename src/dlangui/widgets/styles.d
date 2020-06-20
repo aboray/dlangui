@@ -178,7 +178,6 @@ immutable string STYLE_TAB_DOWN_BUTTON_DARK_TEXT = "TAB_DOWN_BUTTON_DARK_TEXT";
 /// standard style id for tooltip popup
 immutable string STYLE_TOOLTIP = "TOOLTIP";
 
-
 /// standard style id for toolbars layout
 immutable string STYLE_TOOLBAR_HOST = "TOOLBAR_HOST";
 /// standard style id for toolbars
@@ -202,8 +201,6 @@ immutable string STYLE_COLOR_WINDOW_BACKGROUND = "window_background";
 /// dialog background color resource id
 immutable string STYLE_COLOR_DIALOG_BACKGROUND = "dialog_background";
 
-
-
 // Other style constants
 
 /// unspecified align - to take parent's value instead
@@ -226,7 +223,8 @@ enum uint TEXT_FLAGS_USE_PARENT = uint.max - 1;
 enum int WEIGHT_UNSPECIFIED = -1;
 
 /// Align option bit constants
-enum Align : ubyte {
+enum Align : ubyte
+{
     /// alignment is not specified
     Unspecified = ALIGN_UNSPECIFIED,
     /// horizontally align to the left of box
@@ -248,7 +246,8 @@ enum Align : ubyte {
 }
 
 /// text drawing flag bits
-enum TextFlag : uint {
+enum TextFlag : uint
+{
     /// text contains hot key prefixed with & char (e.g. "&File")
     HotKeys = 1,
     /// underline hot key when drawing
@@ -261,14 +260,20 @@ enum TextFlag : uint {
     StrikeThrough = 16 // TODO:
 }
 
-struct DrawableAttributeList {
+struct DrawableAttributeList
+{
     DrawableAttribute[string] _customDrawables;
-    ~this() {
+    ~this()
+    {
         clear();
     }
-    void clear() {
-        foreach(key, ref value; _customDrawables) {
-            if (value) {
+
+    void clear()
+    {
+        foreach (key, ref value; _customDrawables)
+        {
+            if (value)
+            {
                 destroy(value);
                 value = null;
             }
@@ -276,32 +281,49 @@ struct DrawableAttributeList {
         destroy(_customDrawables);
         _customDrawables = null;
     }
-    bool hasKey(string key) const {
+
+    bool hasKey(string key) const
+    {
         return (key in _customDrawables) !is null;
     }
-    ref DrawableRef drawable(string id) const {
+
+    ref DrawableRef drawable(string id) const
+    {
         return _customDrawables[id].drawable;
     }
     /// get custom drawable attribute
-    string drawableId(string id) const {
+    string drawableId(string id) const
+    {
         return _customDrawables[id].drawableId;
     }
-    void set(string id, string resourceId) {
-        if (id in _customDrawables) {
+
+    void set(string id, string resourceId)
+    {
+        if (id in _customDrawables)
+        {
             _customDrawables[id].drawableId = resourceId;
-        } else {
+        }
+        else
+        {
             _customDrawables[id] = new DrawableAttribute(id, resourceId);
         }
     }
-    void copyFrom(ref DrawableAttributeList v) {
+
+    void copyFrom(ref DrawableAttributeList v)
+    {
         clear();
-        foreach(key, value; v._customDrawables) {
+        foreach (key, value; v._customDrawables)
+        {
             set(key, value.drawableId);
         }
     }
-    void onThemeChanged() {
-        foreach(key, ref value; _customDrawables) {
-            if (value) {
+
+    void onThemeChanged()
+    {
+        foreach (key, ref value; _customDrawables)
+        {
+            if (value)
+            {
                 value.onThemeChanged();
             }
         }
@@ -309,7 +331,8 @@ struct DrawableAttributeList {
 }
 
 /// style properties
-class Style {
+class Style
+{
 protected:
     string _id;
     Theme _theme;
@@ -354,36 +377,45 @@ protected:
     DrawableRef _backgroundDrawable;
 
 public:
-    void onThemeChanged() {
+    void onThemeChanged()
+    {
         _font.clear();
         _backgroundDrawable.clear();
-        foreach(s; _substates)
+        foreach (s; _substates)
             s.onThemeChanged();
-        foreach(s; _children)
+        foreach (s; _children)
             s.onThemeChanged();
         _customDrawables.onThemeChanged();
     }
 
-    @property const(Theme) theme() const {
+    @property const(Theme) theme() const
+    {
         if (_theme !is null)
             return _theme;
         return currentTheme;
     }
 
-    @property Theme theme() {
+    @property Theme theme()
+    {
         if (_theme !is null)
             return _theme;
         return currentTheme;
     }
 
-    @property string id() const { return _id; }
-    @property Style id(string id) {
+    @property string id() const
+    {
+        return _id;
+    }
+
+    @property Style id(string id)
+    {
         this._id = id;
         return this;
     }
 
     /// access to parent style for this style
-    @property const(Style) parentStyle() const {
+    @property const(Style) parentStyle() const
+    {
         if (_parentStyle !is null)
             return _parentStyle;
         if (_parentId !is null && currentTheme !is null)
@@ -392,7 +424,8 @@ public:
     }
 
     /// access to parent style for this style
-    @property Style parentStyle() {
+    @property Style parentStyle()
+    {
         if (_parentStyle !is null)
             return _parentStyle;
         if (_parentId !is null && currentTheme !is null)
@@ -400,103 +433,127 @@ public:
         return currentTheme;
     }
 
-    @property string parentStyleId() {
+    @property string parentStyleId()
+    {
         return _parentId;
     }
 
-    @property Style parentStyleId(string id) {
+    @property Style parentStyleId(string id)
+    {
         _parentId = id;
         if (_parentStyle)
-            if (currentTheme) {
+            if (currentTheme)
+            {
                 _parentStyle = currentTheme.get(_parentId);
             }
         return this;
     }
 
-    @property ref DrawableRef backgroundDrawable() const {
-        if (!(cast(Style)this)._backgroundDrawable.isNull)
-            return (cast(Style)this)._backgroundDrawable;
+    @property ref DrawableRef backgroundDrawable() const
+    {
+        if (!(cast(Style) this)._backgroundDrawable.isNull)
+            return (cast(Style) this)._backgroundDrawable;
         string image = backgroundImageId;
         uint color = backgroundColor;
         string borders = border;
         string shadows = boxShadow;
-        if (borders !is null || shadows !is null) {
-            (cast(Style)this)._backgroundDrawable = new CombinedDrawable(color, image, borders, shadows);
-        } else if (image !is null) {
-            (cast(Style)this)._backgroundDrawable = drawableCache.get(image);
-        } else {
-            (cast(Style)this)._backgroundDrawable = isFullyTransparentColor(color) ? new EmptyDrawable() : new SolidFillDrawable(color);
+        if (borders !is null || shadows !is null)
+        {
+            (cast(Style) this)._backgroundDrawable = new CombinedDrawable(color,
+                    image, borders, shadows);
         }
-        return (cast(Style)this)._backgroundDrawable;
+        else if (image !is null)
+        {
+            (cast(Style) this)._backgroundDrawable = drawableCache.get(image);
+        }
+        else
+        {
+            (cast(Style) this)._backgroundDrawable = isFullyTransparentColor(color)
+                ? new EmptyDrawable() : new SolidFillDrawable(color);
+        }
+        return (cast(Style) this)._backgroundDrawable;
     }
 
     /// get custom drawable attribute
-    ref DrawableRef customDrawable(string id) const {
+    ref DrawableRef customDrawable(string id) const
+    {
         if (_customDrawables.hasKey(id))
             return _customDrawables.drawable(id);
         return parentStyle ? parentStyle.customDrawable(id) : currentTheme.customDrawable(id);
     }
 
     /// get custom drawable attribute
-    string customDrawableId(string id) const {
+    string customDrawableId(string id) const
+    {
         if (_customDrawables.hasKey(id))
             return _customDrawables.drawableId(id);
         return parentStyle ? parentStyle.customDrawableId(id) : currentTheme.customDrawableId(id);
     }
 
     /// sets custom drawable attribute for style
-    Style setCustomDrawable(string id, string resourceId) {
+    Style setCustomDrawable(string id, string resourceId)
+    {
         _customDrawables.set(id, resourceId);
         return this;
     }
 
     /// get custom color attribute
-    uint customColor(string id, uint defColor = COLOR_TRANSPARENT) const {
+    uint customColor(string id, uint defColor = COLOR_TRANSPARENT) const
+    {
         if (id in _customColors)
             return _customColors[id];
-        return parentStyle ? parentStyle.customColor(id, defColor) : currentTheme.customColor(id, defColor);
+        return parentStyle ? parentStyle.customColor(id,
+                defColor) : currentTheme.customColor(id, defColor);
     }
 
     /// sets custom color attribute for style
-    Style setCustomColor(string id, uint color) {
+    Style setCustomColor(string id, uint color)
+    {
         _customColors[id] = color;
         return this;
     }
 
     /// get custom length attribute
-    uint customLength(string id, uint defLength = 0) const {
+    uint customLength(string id, uint defLength = 0) const
+    {
         if (id in _customLength)
             return _customLength[id];
-        return parentStyle ? parentStyle.customLength(id, defLength) : currentTheme.customLength(id, defLength);
+        return parentStyle ? parentStyle.customLength(id,
+                defLength) : currentTheme.customLength(id, defLength);
     }
 
     /// sets custom length attribute for style
-    Style setCustomLength(string id, uint value) {
+    Style setCustomLength(string id, uint value)
+    {
         _customLength[id] = value;
         return this;
     }
 
-    void clearCachedObjects() {
+    void clearCachedObjects()
+    {
         onThemeChanged();
     }
 
     //===================================================
     // font properties
 
-    @property ref FontRef font() const {
-        if (!(cast(Style)this)._font.isNull)
-            return (cast(Style)this)._font;
+    @property ref FontRef font() const
+    {
+        if (!(cast(Style) this)._font.isNull)
+            return (cast(Style) this)._font;
         string face = fontFace;
         int size = fontSize;
         ushort weight = fontWeight;
         bool italic = fontItalic;
         FontFamily family = fontFamily;
-        (cast(Style)this)._font = FontManager.instance.getFont(size, weight, italic, family, face);
-        return (cast(Style)this)._font;
+        (cast(Style) this)._font = FontManager.instance.getFont(size, weight,
+                italic, family, face);
+        return (cast(Style) this)._font;
     }
 
     /// font size
-    @property FontFamily fontFamily() const {
+    @property FontFamily fontFamily() const
+    {
         if (_fontFamily != FontFamily.Unspecified)
             return _fontFamily;
         else
@@ -504,7 +561,8 @@ public:
     }
 
     /// font size
-    @property string fontFace() const {
+    @property string fontFace() const
+    {
         if (_fontFace !is null)
             return _fontFace;
         else
@@ -512,7 +570,8 @@ public:
     }
 
     /// font style - italic
-    @property bool fontItalic() const {
+    @property bool fontItalic() const
+    {
         if (_fontStyle != FONT_STYLE_UNSPECIFIED)
             return _fontStyle == FONT_STYLE_ITALIC;
         else
@@ -520,7 +579,8 @@ public:
     }
 
     /// font weight
-    @property ushort fontWeight() const {
+    @property ushort fontWeight() const
+    {
         if (_fontWeight != FONT_WEIGHT_UNSPECIFIED)
             return _fontWeight;
         else
@@ -528,29 +588,36 @@ public:
     }
 
     /// font size
-    @property int fontSize() const {
-        if (_fontSize != FONT_SIZE_UNSPECIFIED) {
+    @property int fontSize() const
+    {
+        if (_fontSize != FONT_SIZE_UNSPECIFIED)
+        {
             if (_fontSize & SIZE_IN_PERCENTS_FLAG)
                 return parentStyle.fontSize * (_fontSize ^ SIZE_IN_PERCENTS_FLAG) / 10000;
             return toPixels(_fontSize);
-        } else
+        }
+        else
             return parentStyle.fontSize;
     }
 
     /// box shadow
-    @property string boxShadow() const {
+    @property string boxShadow() const
+    {
         if (_boxShadow !is null)
             return _boxShadow;
-        else {
+        else
+        {
             return parentStyle.boxShadow;
         }
     }
 
     /// border
-    @property string border() const {
+    @property string border() const
+    {
         if (_border !is null)
             return _border;
-        else {
+        else
+        {
             return parentStyle.border;
         }
     }
@@ -559,21 +626,24 @@ public:
     // layout parameters: margins / padding
 
     /// padding
-    @property const(Rect) padding() const {
+    @property const(Rect) padding() const
+    {
         if (_stateMask || _padding.left == SIZE_UNSPECIFIED)
             return toPixels(parentStyle._padding);
         return toPixels(_padding);
     }
 
     /// margins
-    @property const(Rect) margins() const {
+    @property const(Rect) margins() const
+    {
         if (_stateMask || _margins.left == SIZE_UNSPECIFIED)
             return toPixels(parentStyle._margins);
         return toPixels(_margins);
     }
 
     /// alpha (0=opaque .. 255=transparent)
-    @property uint alpha() const {
+    @property uint alpha() const
+    {
         if (_alpha != COLOR_UNSPECIFIED)
             return _alpha;
         else
@@ -581,7 +651,8 @@ public:
     }
 
     /// text color
-    @property uint textColor() const {
+    @property uint textColor() const
+    {
         if (_textColor != COLOR_UNSPECIFIED)
             return _textColor;
         else
@@ -589,7 +660,8 @@ public:
     }
 
     /// text color
-    @property int maxLines() const {
+    @property int maxLines() const
+    {
         if (_maxLines != SIZE_UNSPECIFIED)
             return _maxLines;
         else
@@ -597,7 +669,8 @@ public:
     }
 
     /// text flags
-    @property uint textFlags() const {
+    @property uint textFlags() const
+    {
         if (_textFlags != TEXT_FLAGS_UNSPECIFIED)
             return _textFlags;
         else
@@ -608,7 +681,8 @@ public:
     // background
 
     /// background color
-    @property uint backgroundColor() const {
+    @property uint backgroundColor() const
+    {
         if (_backgroundColor != COLOR_UNSPECIFIED)
             return _backgroundColor;
         else
@@ -616,7 +690,8 @@ public:
     }
 
     /// background image id
-    @property string backgroundImageId() const {
+    @property string backgroundImageId() const
+    {
         if (_backgroundImageId == COLOR_DRAWABLE)
             return null;
         else if (_backgroundImageId !is null)
@@ -629,57 +704,65 @@ public:
     // size restrictions
 
     /// minimal width constraint, 0 if limit is not set
-    @property uint minWidth() const {
+    @property uint minWidth() const
+    {
         if (_minWidth != SIZE_UNSPECIFIED)
             return toPixels(_minWidth);
         else
             return parentStyle.minWidth;
     }
     /// max width constraint, returns SIZE_UNSPECIFIED if limit is not set
-    @property uint maxWidth() const {
+    @property uint maxWidth() const
+    {
         if (_maxWidth != SIZE_UNSPECIFIED)
             return toPixels(_maxWidth);
         else
             return parentStyle.maxWidth;
     }
     /// minimal height constraint, 0 if limit is not set
-    @property uint minHeight() const {
+    @property uint minHeight() const
+    {
         if (_minHeight != SIZE_UNSPECIFIED)
             return toPixels(_minHeight);
         else
             return parentStyle.minHeight;
     }
     /// max height constraint, SIZE_UNSPECIFIED if limit is not set
-    @property uint maxHeight() const {
+    @property uint maxHeight() const
+    {
         if (_maxHeight != SIZE_UNSPECIFIED)
             return toPixels(_maxHeight);
         else
             return parentStyle.maxHeight;
     }
     /// set min width constraint
-    @property Style minWidth(int value) {
+    @property Style minWidth(int value)
+    {
         _minWidth = value;
         return this;
     }
     /// set max width constraint
-    @property Style maxWidth(int value) {
+    @property Style maxWidth(int value)
+    {
         _maxWidth = value;
         return this;
     }
     /// set min height constraint
-    @property Style minHeight(int value) {
+    @property Style minHeight(int value)
+    {
         _minHeight = value;
         return this;
     }
     /// set max height constraint
-    @property Style maxHeight(int value) {
+    @property Style maxHeight(int value)
+    {
         _maxHeight = value;
         return this;
     }
 
-
     /// layout width parameter
-    @property uint layoutWidth() const {
+    @property uint layoutWidth() const
+    {
         if (_layoutWidth != SIZE_UNSPECIFIED)
             return _layoutWidth;
         else
@@ -687,7 +770,8 @@ public:
     }
 
     /// layout height parameter
-    @property uint layoutHeight() const {
+    @property uint layoutHeight() const
+    {
         if (_layoutHeight != SIZE_UNSPECIFIED)
             return _layoutHeight;
         else
@@ -695,7 +779,8 @@ public:
     }
 
     /// layout weight parameter
-    @property uint layoutWeight() const {
+    @property uint layoutWeight() const
+    {
         if (_layoutWeight != WEIGHT_UNSPECIFIED)
             return _layoutWeight;
         else
@@ -703,17 +788,20 @@ public:
     }
 
     /// set layout height
-    @property Style layoutHeight(int value) {
+    @property Style layoutHeight(int value)
+    {
         _layoutHeight = value;
         return this;
     }
     /// set layout width
-    @property Style layoutWidth(int value) {
+    @property Style layoutWidth(int value)
+    {
         _layoutWidth = value;
         return this;
     }
     /// set layout weight
-    @property Style layoutWeight(int value) {
+    @property Style layoutWeight(int value)
+    {
         _layoutWeight = value;
         return this;
     }
@@ -722,109 +810,132 @@ public:
     // alignment
 
     /// get full alignment (both vertical and horizontal)
-    @property ubyte alignment() const {
+    @property ubyte alignment() const
+    {
         if (_align != Align.Unspecified)
             return _align;
         else
             return parentStyle.alignment;
     }
     /// vertical alignment: Top / VCenter / Bottom
-    @property ubyte valign() const { return alignment & Align.VCenter; }
+    @property ubyte valign() const
+    {
+        return alignment & Align.VCenter;
+    }
     /// horizontal alignment: Left / HCenter / Right
-    @property ubyte halign() const { return alignment & Align.HCenter; }
+    @property ubyte halign() const
+    {
+        return alignment & Align.HCenter;
+    }
 
     /// set alignment
-    @property Style alignment(ubyte value) {
+    @property Style alignment(ubyte value)
+    {
         _align = value;
         return this;
     }
 
-    @property Style fontFace(string face) {
+    @property Style fontFace(string face)
+    {
         if (_fontFace != face)
             clearCachedObjects();
         _fontFace = face;
         return this;
     }
 
-    @property Style fontFamily(FontFamily family) {
+    @property Style fontFamily(FontFamily family)
+    {
         if (_fontFamily != family)
             clearCachedObjects();
         _fontFamily = family;
         return this;
     }
 
-    @property Style fontStyle(ubyte style) {
+    @property Style fontStyle(ubyte style)
+    {
         if (_fontStyle != style)
             clearCachedObjects();
         _fontStyle = style;
         return this;
     }
 
-    @property Style fontWeight(ushort weight) {
+    @property Style fontWeight(ushort weight)
+    {
         if (_fontWeight != weight)
             clearCachedObjects();
         _fontWeight = weight;
         return this;
     }
 
-    @property Style fontSize(int size) {
+    @property Style fontSize(int size)
+    {
         if (_fontSize != size)
             clearCachedObjects();
         _fontSize = size;
         return this;
     }
 
-    @property Style textColor(uint color) {
+    @property Style textColor(uint color)
+    {
         _textColor = color;
         return this;
     }
 
-    @property Style maxLines(int lines) {
+    @property Style maxLines(int lines)
+    {
         _maxLines = lines;
         return this;
     }
 
-    @property Style alpha(uint alpha) {
+    @property Style alpha(uint alpha)
+    {
         _alpha = alpha;
         return this;
     }
 
-    @property Style textFlags(uint flags) {
+    @property Style textFlags(uint flags)
+    {
         _textFlags = flags;
         return this;
     }
 
-    @property Style backgroundColor(uint color) {
+    @property Style backgroundColor(uint color)
+    {
         _backgroundColor = color;
         _backgroundImageId = COLOR_DRAWABLE;
         _backgroundDrawable.clear();
         return this;
     }
 
-    @property Style backgroundImageId(string image) {
+    @property Style backgroundImageId(string image)
+    {
         _backgroundImageId = image;
         _backgroundDrawable.clear();
         return this;
     }
 
-    @property Style boxShadow(string s) {
+    @property Style boxShadow(string s)
+    {
         _boxShadow = s;
         _backgroundDrawable.clear();
         return this;
     }
 
-    @property Style border(string s) {
+    @property Style border(string s)
+    {
         _border = s;
         _backgroundDrawable.clear();
         return this;
     }
 
-    @property Style margins(Rect rc) {
+    @property Style margins(Rect rc)
+    {
         _margins = rc;
         return this;
     }
 
-    Style setMargins(int left, int top, int right, int bottom) {
+    Style setMargins(int left, int top, int right, int bottom)
+    {
         _margins.left = left;
         _margins.top = top;
         _margins.right = right;
@@ -832,28 +943,33 @@ public:
         return this;
     }
 
-    @property Style padding(Rect rc) {
+    @property Style padding(Rect rc)
+    {
         _padding = rc;
         return this;
     }
 
     /// returns colors to draw focus rectangle (one for solid, two for vertical gradient) or null if no focus rect should be drawn for style
-    @property const(uint[]) focusRectColors() const {
-        if (_focusRectColors) {
+    @property const(uint[]) focusRectColors() const
+    {
+        if (_focusRectColors)
+        {
             if (_focusRectColors.length == 1 && _focusRectColors[0] == COLOR_UNSPECIFIED)
                 return null;
-            return cast(const)_focusRectColors;
+            return cast(const) _focusRectColors;
         }
         return parentStyle.focusRectColors;
     }
 
     /// sets colors to draw focus rectangle or null if no focus rect should be drawn for style
-    @property Style focusRectColors(uint[] colors) {
+    @property Style focusRectColors(uint[] colors)
+    {
         _focusRectColors = colors;
         return this;
     }
 
-    Style setPadding(int left, int top, int right, int bottom) {
+    Style setPadding(int left, int top, int right, int bottom)
+    {
         _padding.left = left;
         _padding.top = top;
         _padding.right = right;
@@ -862,9 +978,13 @@ public:
     }
 
     debug private static __gshared int _instanceCount;
-    debug @property static int instanceCount() { return _instanceCount; }
+    debug @property static int instanceCount()
+    {
+        return _instanceCount;
+    }
 
-    this(Theme theme, string id) {
+    this(Theme theme, string id)
+    {
         _theme = theme;
         _parentStyle = theme;
         _id = id;
@@ -872,15 +992,17 @@ public:
         //Log.d("Created style ", _id, ", count=", ++_instanceCount);
     }
 
-
-    ~this() {
-        foreach(ref Style item; _substates) {
+    ~this()
+    {
+        foreach (ref Style item; _substates)
+        {
             //Log.d("Destroying substate");
             destroy(item);
             item = null;
         }
         _substates.destroy();
-        foreach(ref Style item; _children) {
+        foreach (ref Style item; _children)
+        {
             destroy(item);
             item = null;
         }
@@ -893,7 +1015,8 @@ public:
     }
 
     /// create named substyle of this style
-    Style createSubstyle(string id) {
+    Style createSubstyle(string id)
+    {
         Style child = (_theme !is null ? _theme : currentTheme).createSubstyle(id);
         child._parentStyle = this;
         _children ~= child;
@@ -901,9 +1024,11 @@ public:
     }
 
     /// create state substyle for this style
-    Style createState(uint stateMask = 0, uint stateValue = 0) {
+    Style createState(uint stateMask = 0, uint stateValue = 0)
+    {
         assert(stateMask != 0);
-        debug(styles) Log.d("Creating substate ", stateMask);
+        debug (styles)
+            Log.d("Creating substate ", stateMask);
         Style child = (_theme !is null ? _theme : currentTheme).createSubstyle(null);
         child._parentStyle = this;
         child._stateMask = stateMask;
@@ -915,7 +1040,8 @@ public:
         return child;
     }
 
-    Style clone() {
+    Style clone()
+    {
         Style res = new Style(_theme, null);
         res._stateMask = _stateMask;
         res._stateValue = _stateValue;
@@ -952,10 +1078,12 @@ public:
     }
 
     /// find exact existing state style or create new if no matched styles found
-    Style getOrCreateState(uint stateMask = 0, uint stateValue = 0) {
+    Style getOrCreateState(uint stateMask = 0, uint stateValue = 0)
+    {
         if (stateValue == State.Normal)
             return this;
-        foreach(item; _substates) {
+        foreach (item; _substates)
+        {
             if ((item._stateMask == stateMask) && (item._stateValue == stateValue))
                 return item;
         }
@@ -963,13 +1091,15 @@ public:
     }
 
     /// find substyle based on widget state (e.g. focused, pressed, ...)
-    Style forState(uint state) {
+    Style forState(uint state)
+    {
         if (state == State.Normal)
             return this;
         //Log.d("forState ", state, " styleId=", _id, " substates=", _substates.length);
         if (parentStyle !is null && _substates.length == 0 && parentStyle._substates.length > 0) //id is null &&
             return parentStyle.forState(state);
-        foreach(item; _substates) {
+        foreach (item; _substates)
+        {
             if ((item._stateMask & state) == item._stateValue)
                 return item;
         }
@@ -977,13 +1107,15 @@ public:
     }
 
     /// find substyle based on widget state (e.g. focused, pressed, ...)
-    const(Style) forState(uint state) const {
+    const(Style) forState(uint state) const
+    {
         if (state == State.Normal)
             return this;
         //Log.d("forState ", state, " styleId=", _id, " substates=", _substates.length);
         if (parentStyle !is null && _substates.length == 0 && parentStyle._substates.length > 0) //id is null &&
             return parentStyle.forState(state);
-        foreach(item; _substates) {
+        foreach (item; _substates)
+        {
             if ((item._stateMask & state) == item._stateValue)
                 return item;
         }
@@ -993,10 +1125,12 @@ public:
 }
 
 /// Theme - root for style hierarhy.
-class Theme : Style {
+class Theme : Style
+{
     protected Style[string] _byId;
 
-    this(string id) {
+    this(string id)
+    {
         super(this, id);
         _parentStyle = null;
         _backgroundColor = COLOR_TRANSPARENT; // transparent
@@ -1016,27 +1150,33 @@ class Theme : Style {
         _layoutWeight = 1;
     }
 
-    ~this() {
+    ~this()
+    {
         //Log.d("Theme destructor");
-        if (unknownStyleIds.length > 0) {
+        if (unknownStyleIds.length > 0)
+        {
             Log.e("Unknown style statistics: ", unknownStyleIds);
         }
-        foreach(ref Style item; _byId) {
+        foreach (ref Style item; _byId)
+        {
             destroy(item);
             item = null;
         }
         _byId.destroy();
     }
 
-    override void onThemeChanged() {
+    override void onThemeChanged()
+    {
         super.onThemeChanged();
-        foreach(key, value; _byId) {
+        foreach (key, value; _byId)
+        {
             value.onThemeChanged();
         }
     }
 
     /// create wrapper style which will have currentTheme.get(id) as parent instead of fixed parent - to modify some base style properties in widget
-    Style modifyStyle(string id) {
+    Style modifyStyle(string id)
+    {
         Style style = new Style(null, null);
         style._parentId = id;
         style._align = Align.Unspecified; // inherit
@@ -1045,8 +1185,10 @@ class Theme : Style {
         style._textColor = COLOR_UNSPECIFIED; // inherit
         style._textFlags = TEXT_FLAGS_UNSPECIFIED; // inherit
         Style parent = get(id);
-        if (parent) {
-            foreach(item; parent._substates) {
+        if (parent)
+        {
+            foreach (item; parent._substates)
+            {
                 Style substate = item.clone();
                 substate._parentStyle = style;
                 style._substates ~= substate;
@@ -1058,70 +1200,83 @@ class Theme : Style {
     // ================================================
     // override to avoid infinite recursion
     /// font size
-    @property override string backgroundImageId() const {
+    @property override string backgroundImageId() const
+    {
         return _backgroundImageId;
     }
     /// box shadow
-    @property override string boxShadow() const {
+    @property override string boxShadow() const
+    {
         return _boxShadow;
     }
     /// border
-    @property override string border() const {
+    @property override string border() const
+    {
         return _border;
     }
     /// minimal width constraint, 0 if limit is not set
-    @property override uint minWidth() const {
+    @property override uint minWidth() const
+    {
         return _minWidth;
     }
     /// max width constraint, returns SIZE_UNSPECIFIED if limit is not set
-    @property override uint maxWidth() const {
+    @property override uint maxWidth() const
+    {
         return _maxWidth;
     }
     /// minimal height constraint, 0 if limit is not set
-    @property override uint minHeight() const {
+    @property override uint minHeight() const
+    {
         return _minHeight;
     }
     /// max height constraint, SIZE_UNSPECIFIED if limit is not set
-    @property override uint maxHeight() const {
+    @property override uint maxHeight() const
+    {
         return _maxHeight;
     }
 
     private DrawableRef _emptyDrawable;
-    override ref DrawableRef customDrawable(string id) const {
+    override ref DrawableRef customDrawable(string id) const
+    {
         if (_customDrawables.hasKey(id))
             return _customDrawables.drawable(id);
-        return (cast(Theme)this)._emptyDrawable;
+        return (cast(Theme) this)._emptyDrawable;
     }
 
-    override string customDrawableId(string id) const {
+    override string customDrawableId(string id) const
+    {
         if (_customDrawables.hasKey(id))
             return _customDrawables.drawableId(id);
         return null;
     }
 
     /// get custom color attribute - transparent by default
-    override uint customColor(string id, uint defColor = COLOR_TRANSPARENT) const {
+    override uint customColor(string id, uint defColor = COLOR_TRANSPARENT) const
+    {
         if (id in _customColors)
             return _customColors[id];
         return defColor;
     }
 
     /// get custom color attribute - transparent by default
-    override uint customLength(string id, uint defValue = 0) const {
+    override uint customLength(string id, uint defValue = 0) const
+    {
         if (id in _customLength)
             return _customLength[id];
         return defValue;
     }
 
     /// returns colors to draw focus rectangle or null if no focus rect should be drawn for style
-    @property override const(uint[]) focusRectColors() const {
+    @property override const(uint[]) focusRectColors() const
+    {
         if (_focusRectColors)
             return _focusRectColors;
         return null;
     }
 
     /// create new named style or get existing
-    override Style createSubstyle(string id) {
+    override Style createSubstyle(string id)
+    {
         if (id !is null && id in _byId)
             return _byId[id]; // already exists
         Style style = new Style(this, id);
@@ -1134,7 +1289,8 @@ class Theme : Style {
     /// to track unknown styles refernced from code
     int[string] unknownStyleIds;
     /// find style by id, returns theme if not style with specified ID is not found
-    @property Style get(string id) {
+    @property Style get(string id)
+    {
         if (id is null)
             return this;
         if (id in _byId)
@@ -1142,7 +1298,8 @@ class Theme : Style {
         // track unknown style ID references
         if (id in unknownStyleIds)
             unknownStyleIds[id] = unknownStyleIds[id] + 1;
-        else {
+        else
+        {
             Log.e("Unknown style ID requested: ", id);
             unknownStyleIds[id] = 1;
         }
@@ -1150,27 +1307,36 @@ class Theme : Style {
     }
 
     /// find substyle based on widget state (e.g. focused, pressed, ...)
-    override const(Style) forState(uint state) const {
+    override const(Style) forState(uint state) const
+    {
         return this;
     }
 
     /// find substyle based on widget state (e.g. focused, pressed, ...)
-    override Style forState(uint state) {
+    override Style forState(uint state)
+    {
         return this;
     }
 
-    void dumpStats() {
-        Log.d("Theme ", _id, ": children:", _children.length, ", substates:", _substates.length, ", mapsize:", _byId.length);
+    void dumpStats()
+    {
+        Log.d("Theme ", _id, ": children:", _children.length, ", substates:",
+                _substates.length, ", mapsize:", _byId.length);
     }
 }
 
 /// to access current theme
 private __gshared Theme _currentTheme;
 /// current theme accessor
-@property Theme currentTheme() { return _currentTheme; }
+@property Theme currentTheme()
+{
+    return _currentTheme;
+}
 /// set new current theme
-@property void currentTheme(Theme theme) {
-    if (_currentTheme !is null) {
+@property void currentTheme(Theme theme)
+{
+    if (_currentTheme !is null)
+    {
         destroy(_currentTheme);
     }
     _currentTheme = theme;
@@ -1183,27 +1349,35 @@ immutable ATTR_SCROLLBAR_BUTTON_RIGHT = "scrollbar_button_right";
 immutable ATTR_SCROLLBAR_INDICATOR_VERTICAL = "scrollbar_indicator_vertical";
 immutable ATTR_SCROLLBAR_INDICATOR_HORIZONTAL = "scrollbar_indicator_horizontal";
 
-Theme createDefaultTheme() {
+Theme createDefaultTheme()
+{
     Log.d("Creating default theme");
     Theme res = new Theme("default");
     //res.fontSize(14);
-    version (Windows) {
+    version (Windows)
+    {
         res.fontFace = "Verdana";
     }
     //res.fontFace = "Arial Narrow";
-    static if (WIDGET_STYLE_CONSOLE) {
+    static if (WIDGET_STYLE_CONSOLE)
+    {
         res.fontSize = 1;
         res.textColor = 0xFFFFFF;
-        Style button = res.createSubstyle(STYLE_BUTTON).backgroundColor(0x808080).alignment(Align.Center).setMargins(0, 0, 0, 0).textColor(0x000000);
+        Style button = res.createSubstyle(STYLE_BUTTON).backgroundColor(0x808080)
+            .alignment(Align.Center).setMargins(0, 0, 0, 0).textColor(0x000000);
         //button.createState(State.Selected, State.Selected).backgroundColor(0xFFFFFF);
         button.createState(State.Pressed, State.Pressed).backgroundColor(0xFFFF00);
-        button.createState(State.Focused|State.Hovered, State.Focused|State.Hovered).textColor(0x800000).backgroundColor(0xFFFFFF);
-        button.createState(State.Focused, State.Focused).backgroundColor(0xFFFFFF).textColor(0x000080);
+        button.createState(State.Focused | State.Hovered, State.Focused | State.Hovered)
+            .textColor(0x800000).backgroundColor(0xFFFFFF);
+        button.createState(State.Focused, State.Focused)
+            .backgroundColor(0xFFFFFF).textColor(0x000080);
         button.createState(State.Hovered, State.Hovered).textColor(0x800000);
-        Style buttonLabel = res.createSubstyle(STYLE_BUTTON_LABEL).layoutWidth(FILL_PARENT).alignment(Align.Left|Align.VCenter);
+        Style buttonLabel = res.createSubstyle(STYLE_BUTTON_LABEL)
+            .layoutWidth(FILL_PARENT).alignment(Align.Left | Align.VCenter);
         //buttonLabel.createState(State.Hovered, State.Hovered).textColor(0x800000);
         //buttonLabel.createState(State.Focused, State.Focused).textColor(0x000080);
-        res.createSubstyle(STYLE_BUTTON_TRANSPARENT).backgroundImageId("btn_background_transparent").alignment(Align.Center);
+        res.createSubstyle(STYLE_BUTTON_TRANSPARENT)
+            .backgroundImageId("btn_background_transparent").alignment(Align.Center);
         res.createSubstyle(STYLE_BUTTON_IMAGE).alignment(Align.Center).textColor(0x000000);
         res.createSubstyle(STYLE_TEXT).setMargins(0, 0, 0, 0).setPadding(0, 0, 0, 0);
         res.createSubstyle(STYLE_HSPACER).layoutWidth(FILL_PARENT).minWidth(5).layoutWeight(100);
@@ -1219,24 +1393,28 @@ Theme createDefaultTheme() {
         res.setCustomDrawable(ATTR_SCROLLBAR_BUTTON_LEFT, "scrollbar_btn_left");
         res.setCustomDrawable(ATTR_SCROLLBAR_BUTTON_RIGHT, "scrollbar_btn_right");
         res.setCustomDrawable(ATTR_SCROLLBAR_INDICATOR_VERTICAL, "scrollbar_indicator_vertical");
-        res.setCustomDrawable(ATTR_SCROLLBAR_INDICATOR_HORIZONTAL, "scrollbar_indicator_horizontal");
+        res.setCustomDrawable(ATTR_SCROLLBAR_INDICATOR_HORIZONTAL,
+                "scrollbar_indicator_horizontal");
 
         Style scrollbar = res.createSubstyle(STYLE_SCROLLBAR);
         scrollbar.backgroundColor(0xC0808080);
         Style scrollbarButton = button.createSubstyle(STYLE_SCROLLBAR_BUTTON);
         Style scrollbarSlider = res.createSubstyle(STYLE_SLIDER);
-        Style scrollbarPage = res.createSubstyle(STYLE_PAGE_SCROLL).backgroundColor(COLOR_TRANSPARENT);
+        Style scrollbarPage = res.createSubstyle(STYLE_PAGE_SCROLL)
+            .backgroundColor(COLOR_TRANSPARENT);
         scrollbarPage.createState(State.Pressed, State.Pressed).backgroundColor(0xC0404080);
         scrollbarPage.createState(State.Hovered, State.Hovered).backgroundColor(0xF0404080);
 
         Style tabUp = res.createSubstyle(STYLE_TAB_UP);
         tabUp.backgroundImageId("tab_up_background");
         tabUp.layoutWidth(FILL_PARENT);
-        tabUp.createState(State.Selected, State.Selected).backgroundImageId("tab_up_backgrond_selected");
+        tabUp.createState(State.Selected, State.Selected)
+            .backgroundImageId("tab_up_backgrond_selected");
         Style tabUpButtonText = res.createSubstyle(STYLE_TAB_UP_BUTTON_TEXT);
         tabUpButtonText.textColor(0x000000).alignment(Align.Center);
         tabUpButtonText.createState(State.Selected, State.Selected).textColor(0x000000);
-        tabUpButtonText.createState(State.Selected|State.Focused, State.Selected|State.Focused).textColor(0x000000);
+        tabUpButtonText.createState(State.Selected | State.Focused,
+                State.Selected | State.Focused).textColor(0x000000);
         tabUpButtonText.createState(State.Focused, State.Focused).textColor(0x000000);
         tabUpButtonText.createState(State.Hovered, State.Hovered).textColor(0xFFE0E0);
         Style tabUpButton = res.createSubstyle(STYLE_TAB_UP_BUTTON);
@@ -1250,35 +1428,48 @@ Theme createDefaultTheme() {
         tabHost.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         tabHost.backgroundColor(0xF0F0F0);
         Style tabWidget = res.createSubstyle(STYLE_TAB_WIDGET);
-        tabWidget.setPadding(3,3,3,3).backgroundColor(0xEEEEEE);
+        tabWidget.setPadding(3, 3, 3, 3).backgroundColor(0xEEEEEE);
         //tabWidget.backgroundImageId("frame_blue");
         //res.dumpStats();
 
-        Style mainMenu = res.createSubstyle(STYLE_MAIN_MENU).backgroundColor(0xEFEFF2).layoutWidth(FILL_PARENT);
-        Style mainMenuItem = res.createSubstyle(STYLE_MAIN_MENU_ITEM).setPadding(4,2,4,2).backgroundImageId("main_menu_item_background").textFlags(TEXT_FLAGS_USE_PARENT);
-        Style menuItem = res.createSubstyle(STYLE_MENU_ITEM).setPadding(4,2,4,2); //.backgroundColor(0xE0E080)   ;
+        Style mainMenu = res.createSubstyle(STYLE_MAIN_MENU)
+            .backgroundColor(0xEFEFF2).layoutWidth(FILL_PARENT);
+        Style mainMenuItem = res.createSubstyle(STYLE_MAIN_MENU_ITEM).setPadding(4, 2, 4, 2)
+            .backgroundImageId("main_menu_item_background").textFlags(TEXT_FLAGS_USE_PARENT);
+        Style menuItem = res.createSubstyle(STYLE_MENU_ITEM).setPadding(4, 2, 4, 2); //.backgroundColor(0xE0E080)   ;
         menuItem.createState(State.Focused, State.Focused).backgroundColor(0x40C0C000);
         menuItem.createState(State.Pressed, State.Pressed).backgroundColor(0x4080C000);
         menuItem.createState(State.Selected, State.Selected).backgroundColor(0x00F8F9Fa);
         menuItem.createState(State.Hovered, State.Hovered).backgroundColor(0xC0FFFF00);
-        res.createSubstyle(STYLE_MENU_ICON).setMargins(2,2,2,2).alignment(Align.VCenter|Align.Left).createState(State.Enabled,0).alpha(0xA0);
-        res.createSubstyle(STYLE_MENU_LABEL).setMargins(4,2,4,2).alignment(Align.VCenter|Align.Left).textFlags(TextFlag.UnderlineHotKeys).createState(State.Enabled,0).textColor(0x80404040);
-        res.createSubstyle(STYLE_MAIN_MENU_LABEL).setMargins(4,2,4,2).alignment(Align.VCenter|Align.Left).textFlags(TEXT_FLAGS_USE_PARENT).createState(State.Enabled,0).textColor(0x80404040);
-        res.createSubstyle(STYLE_MENU_ACCEL).setMargins(4,2,4,2).alignment(Align.VCenter|Align.Left).createState(State.Enabled,0).textColor(0x80404040);
+        res.createSubstyle(STYLE_MENU_ICON).setMargins(2, 2, 2, 2)
+            .alignment(Align.VCenter | Align.Left).createState(State.Enabled, 0).alpha(0xA0);
+        res.createSubstyle(STYLE_MENU_LABEL).setMargins(4, 2, 4, 2)
+            .alignment(Align.VCenter | Align.Left).textFlags(TextFlag.UnderlineHotKeys)
+            .createState(State.Enabled, 0).textColor(0x80404040);
+        res.createSubstyle(STYLE_MAIN_MENU_LABEL).setMargins(4, 2, 4, 2)
+            .alignment(Align.VCenter | Align.Left).textFlags(TEXT_FLAGS_USE_PARENT)
+            .createState(State.Enabled, 0).textColor(0x80404040);
+        res.createSubstyle(STYLE_MENU_ACCEL).setMargins(4, 2, 4, 2)
+            .alignment(Align.VCenter | Align.Left).createState(State.Enabled,
+                    0).textColor(0x80404040);
 
-        Style transparentButtonBackground = res.createSubstyle(STYLE_TRANSPARENT_BUTTON_BACKGROUND).backgroundImageId("transparent_button_background").setPadding(4,2,4,2); //.backgroundColor(0xE0E080)   ;
+        Style transparentButtonBackground = res.createSubstyle(STYLE_TRANSPARENT_BUTTON_BACKGROUND)
+            .backgroundImageId("transparent_button_background").setPadding(4, 2, 4, 2); //.backgroundColor(0xE0E080)   ;
         //transparentButtonBackground.createState(State.Focused, State.Focused).backgroundColor(0xC0C0C000);
         //transparentButtonBackground.createState(State.Pressed, State.Pressed).backgroundColor(0x4080C000);
         //transparentButtonBackground.createState(State.Selected, State.Selected).backgroundColor(0x00F8F9Fa);
         //transparentButtonBackground.createState(State.Hovered, State.Hovered).backgroundColor(0xD0FFFF00);
 
-        Style poopupMenu = res.createSubstyle(STYLE_POPUP_MENU).backgroundImageId("popup_menu_background_normal");
+        Style poopupMenu = res.createSubstyle(STYLE_POPUP_MENU)
+            .backgroundImageId("popup_menu_background_normal");
 
-        Style listItem = res.createSubstyle(STYLE_LIST_ITEM).backgroundImageId("list_item_background");
+        Style listItem = res.createSubstyle(STYLE_LIST_ITEM)
+            .backgroundImageId("list_item_background");
         //listItem.createState(State.Selected, State.Selected).backgroundColor(0xC04040FF).textColor(0x000000);
         //listItem.createState(State.Enabled, 0).textColor(0x80000000); // half transparent text for disabled item
 
-        Style editLine = res.createSubstyle(STYLE_EDIT_LINE).backgroundImageId(q{
+        Style editLine = res.createSubstyle(STYLE_EDIT_LINE)
+            .backgroundImageId(q{
                 {
                     text: [
                        "╔═╗",
@@ -1288,22 +1479,29 @@ Theme createDefaultTheme() {
                     textColor: [0xFF0000],
                     ninepatch: [1,1,1,1]
                 }
-            })
-            .setPadding(0,0,0,0).setMargins(0,0,0,0).minWidth(20)
-            .fontFace("Arial").fontFamily(FontFamily.SansSerif).fontSize(1);
-        Style editBox = res.createSubstyle(STYLE_EDIT_BOX).backgroundImageId("editbox_background")
-            .setPadding(0,0,0,0).setMargins(0,0,0,0).minWidth(30).minHeight(8).layoutHeight(FILL_PARENT).layoutWidth(FILL_PARENT)
+            }).setPadding(0, 0, 0, 0)
+            .setMargins(0, 0, 0, 0).minWidth(20).fontFace("Arial")
+            .fontFamily(FontFamily.SansSerif).fontSize(1);
+        Style editBox = res.createSubstyle(STYLE_EDIT_BOX).backgroundImageId(
+                "editbox_background").setPadding(0, 0, 0, 0).setMargins(0, 0,
+                0, 0).minWidth(30).minHeight(8).layoutHeight(FILL_PARENT).layoutWidth(FILL_PARENT)
             .fontFace("Courier New").fontFamily(FontFamily.MonoSpace).fontSize(1);
-    } else {
+    }
+    else
+    {
         res.fontSize = 15; // TODO: choose based on DPI
-        Style button = res.createSubstyle(STYLE_BUTTON).backgroundImageId("btn_background").alignment(Align.Center).setMargins(5,5,5,5);
-        res.createSubstyle(STYLE_BUTTON_TRANSPARENT).backgroundImageId("btn_background_transparent").alignment(Align.Center);
-        res.createSubstyle(STYLE_BUTTON_LABEL).layoutWidth(FILL_PARENT).alignment(Align.Left|Align.VCenter);
+        Style button = res.createSubstyle(STYLE_BUTTON).backgroundImageId("btn_background")
+            .alignment(Align.Center).setMargins(5, 5, 5, 5);
+        res.createSubstyle(STYLE_BUTTON_TRANSPARENT)
+            .backgroundImageId("btn_background_transparent").alignment(Align.Center);
+        res.createSubstyle(STYLE_BUTTON_LABEL).layoutWidth(FILL_PARENT)
+            .alignment(Align.Left | Align.VCenter);
         res.createSubstyle(STYLE_BUTTON_IMAGE).alignment(Align.Center);
-        res.createSubstyle(STYLE_TEXT).setMargins(2,2,2,2).setPadding(1,1,1,1);
+        res.createSubstyle(STYLE_TEXT).setMargins(2, 2, 2, 2).setPadding(1, 1, 1, 1);
         res.createSubstyle(STYLE_HSPACER).layoutWidth(FILL_PARENT).minWidth(5).layoutWeight(100);
         res.createSubstyle(STYLE_VSPACER).layoutHeight(FILL_PARENT).minHeight(5).layoutWeight(100);
-        res.createSubstyle(STYLE_BUTTON_NOMARGINS).backgroundImageId("btn_background").alignment(Align.Center); // .setMargins(5,5,5,5)
+        res.createSubstyle(STYLE_BUTTON_NOMARGINS)
+            .backgroundImageId("btn_background").alignment(Align.Center); // .setMargins(5,5,5,5)
         //button.createState(State.Enabled | State.Focused, State.Focused).backgroundImageId("btn_default_small_normal_disable_focused");
         //button.createState(State.Enabled, 0).backgroundImageId("btn_default_small_normal_disable");
         //button.createState(State.Pressed, State.Pressed).backgroundImageId("btn_default_small_pressed");
@@ -1314,24 +1512,28 @@ Theme createDefaultTheme() {
         res.setCustomDrawable(ATTR_SCROLLBAR_BUTTON_LEFT, "scrollbar_btn_left");
         res.setCustomDrawable(ATTR_SCROLLBAR_BUTTON_RIGHT, "scrollbar_btn_right");
         res.setCustomDrawable(ATTR_SCROLLBAR_INDICATOR_VERTICAL, "scrollbar_indicator_vertical");
-        res.setCustomDrawable(ATTR_SCROLLBAR_INDICATOR_HORIZONTAL, "scrollbar_indicator_horizontal");
+        res.setCustomDrawable(ATTR_SCROLLBAR_INDICATOR_HORIZONTAL,
+                "scrollbar_indicator_horizontal");
 
         Style scrollbar = res.createSubstyle(STYLE_SCROLLBAR);
         scrollbar.backgroundColor(0xC0808080);
         Style scrollbarButton = button.createSubstyle(STYLE_SCROLLBAR_BUTTON);
         Style scrollbarSlider = res.createSubstyle(STYLE_SLIDER);
-        Style scrollbarPage = res.createSubstyle(STYLE_PAGE_SCROLL).backgroundColor(COLOR_TRANSPARENT);
+        Style scrollbarPage = res.createSubstyle(STYLE_PAGE_SCROLL)
+            .backgroundColor(COLOR_TRANSPARENT);
         scrollbarPage.createState(State.Pressed, State.Pressed).backgroundColor(0xC0404080);
         scrollbarPage.createState(State.Hovered, State.Hovered).backgroundColor(0xF0404080);
 
         Style tabUp = res.createSubstyle(STYLE_TAB_UP);
         tabUp.backgroundImageId("tab_up_background");
         tabUp.layoutWidth(FILL_PARENT);
-        tabUp.createState(State.Selected, State.Selected).backgroundImageId("tab_up_backgrond_selected");
+        tabUp.createState(State.Selected, State.Selected)
+            .backgroundImageId("tab_up_backgrond_selected");
         Style tabUpButtonText = res.createSubstyle(STYLE_TAB_UP_BUTTON_TEXT);
         tabUpButtonText.textColor(0x000000).fontSize(12).alignment(Align.Center);
         tabUpButtonText.createState(State.Selected, State.Selected).textColor(0x000000);
-        tabUpButtonText.createState(State.Selected|State.Focused, State.Selected|State.Focused).textColor(0x000000);
+        tabUpButtonText.createState(State.Selected | State.Focused,
+                State.Selected | State.Focused).textColor(0x000000);
         tabUpButtonText.createState(State.Focused, State.Focused).textColor(0x000000);
         tabUpButtonText.createState(State.Hovered, State.Hovered).textColor(0xFFE0E0);
         Style tabUpButton = res.createSubstyle(STYLE_TAB_UP_BUTTON);
@@ -1345,39 +1547,52 @@ Theme createDefaultTheme() {
         tabHost.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         tabHost.backgroundColor(0xF0F0F0);
         Style tabWidget = res.createSubstyle(STYLE_TAB_WIDGET);
-        tabWidget.setPadding(3,3,3,3).backgroundColor(0xEEEEEE);
+        tabWidget.setPadding(3, 3, 3, 3).backgroundColor(0xEEEEEE);
         //tabWidget.backgroundImageId("frame_blue");
         //res.dumpStats();
 
-        Style mainMenu = res.createSubstyle(STYLE_MAIN_MENU).backgroundColor(0xEFEFF2).layoutWidth(FILL_PARENT);
-        Style mainMenuItem = res.createSubstyle(STYLE_MAIN_MENU_ITEM).setPadding(4,2,4,2).backgroundImageId("main_menu_item_background").textFlags(TEXT_FLAGS_USE_PARENT);
-        Style menuItem = res.createSubstyle(STYLE_MENU_ITEM).setPadding(4,2,4,2); //.backgroundColor(0xE0E080)   ;
+        Style mainMenu = res.createSubstyle(STYLE_MAIN_MENU)
+            .backgroundColor(0xEFEFF2).layoutWidth(FILL_PARENT);
+        Style mainMenuItem = res.createSubstyle(STYLE_MAIN_MENU_ITEM).setPadding(4, 2, 4, 2)
+            .backgroundImageId("main_menu_item_background").textFlags(TEXT_FLAGS_USE_PARENT);
+        Style menuItem = res.createSubstyle(STYLE_MENU_ITEM).setPadding(4, 2, 4, 2); //.backgroundColor(0xE0E080)   ;
         menuItem.createState(State.Focused, State.Focused).backgroundColor(0x40C0C000);
         menuItem.createState(State.Pressed, State.Pressed).backgroundColor(0x4080C000);
         menuItem.createState(State.Selected, State.Selected).backgroundColor(0x00F8F9Fa);
         menuItem.createState(State.Hovered, State.Hovered).backgroundColor(0xC0FFFF00);
-        res.createSubstyle(STYLE_MENU_ICON).setMargins(2,2,2,2).alignment(Align.VCenter|Align.Left).createState(State.Enabled,0).alpha(0xA0);
-        res.createSubstyle(STYLE_MENU_LABEL).setMargins(4,2,4,2).alignment(Align.VCenter|Align.Left).textFlags(TextFlag.UnderlineHotKeys).createState(State.Enabled,0).textColor(0x80404040);
-        res.createSubstyle(STYLE_MAIN_MENU_LABEL).setMargins(4,2,4,2).alignment(Align.VCenter|Align.Left).textFlags(TEXT_FLAGS_USE_PARENT).createState(State.Enabled,0).textColor(0x80404040);
-        res.createSubstyle(STYLE_MENU_ACCEL).setMargins(4,2,4,2).alignment(Align.VCenter|Align.Left).createState(State.Enabled,0).textColor(0x80404040);
+        res.createSubstyle(STYLE_MENU_ICON).setMargins(2, 2, 2, 2)
+            .alignment(Align.VCenter | Align.Left).createState(State.Enabled, 0).alpha(0xA0);
+        res.createSubstyle(STYLE_MENU_LABEL).setMargins(4, 2, 4, 2)
+            .alignment(Align.VCenter | Align.Left).textFlags(TextFlag.UnderlineHotKeys)
+            .createState(State.Enabled, 0).textColor(0x80404040);
+        res.createSubstyle(STYLE_MAIN_MENU_LABEL).setMargins(4, 2, 4, 2)
+            .alignment(Align.VCenter | Align.Left).textFlags(TEXT_FLAGS_USE_PARENT)
+            .createState(State.Enabled, 0).textColor(0x80404040);
+        res.createSubstyle(STYLE_MENU_ACCEL).setMargins(4, 2, 4, 2)
+            .alignment(Align.VCenter | Align.Left).createState(State.Enabled,
+                    0).textColor(0x80404040);
 
-        Style transparentButtonBackground = res.createSubstyle(STYLE_TRANSPARENT_BUTTON_BACKGROUND).backgroundImageId("transparent_button_background").setPadding(4,2,4,2); //.backgroundColor(0xE0E080)   ;
+        Style transparentButtonBackground = res.createSubstyle(STYLE_TRANSPARENT_BUTTON_BACKGROUND)
+            .backgroundImageId("transparent_button_background").setPadding(4, 2, 4, 2); //.backgroundColor(0xE0E080)   ;
         //transparentButtonBackground.createState(State.Focused, State.Focused).backgroundColor(0xC0C0C000);
         //transparentButtonBackground.createState(State.Pressed, State.Pressed).backgroundColor(0x4080C000);
         //transparentButtonBackground.createState(State.Selected, State.Selected).backgroundColor(0x00F8F9Fa);
         //transparentButtonBackground.createState(State.Hovered, State.Hovered).backgroundColor(0xD0FFFF00);
 
-        Style poopupMenu = res.createSubstyle(STYLE_POPUP_MENU).backgroundImageId("popup_menu_background_normal");
+        Style poopupMenu = res.createSubstyle(STYLE_POPUP_MENU)
+            .backgroundImageId("popup_menu_background_normal");
 
-        Style listItem = res.createSubstyle(STYLE_LIST_ITEM).backgroundImageId("list_item_background");
+        Style listItem = res.createSubstyle(STYLE_LIST_ITEM)
+            .backgroundImageId("list_item_background");
         //listItem.createState(State.Selected, State.Selected).backgroundColor(0xC04040FF).textColor(0x000000);
         //listItem.createState(State.Enabled, 0).textColor(0x80000000); // half transparent text for disabled item
 
-        Style editLine = res.createSubstyle(STYLE_EDIT_LINE).backgroundImageId("editbox_background")
-            .setPadding(5,6,5,6).setMargins(2,2,2,2).minWidth(40)
-            .fontFace("Arial").fontFamily(FontFamily.SansSerif).fontSize(16);
-        Style editBox = res.createSubstyle(STYLE_EDIT_BOX).backgroundImageId("editbox_background")
-            .setPadding(5,6,5,6).setMargins(2,2,2,2).minWidth(100).minHeight(60).layoutHeight(FILL_PARENT).layoutWidth(FILL_PARENT)
+        Style editLine = res.createSubstyle(STYLE_EDIT_LINE).backgroundImageId(
+                "editbox_background").setPadding(5, 6, 5, 6).setMargins(2, 2,
+                2, 2).minWidth(40).fontFace("Arial").fontFamily(FontFamily.SansSerif).fontSize(16);
+        Style editBox = res.createSubstyle(STYLE_EDIT_BOX).backgroundImageId(
+                "editbox_background").setPadding(5, 6, 5, 6).setMargins(2, 2,
+                2, 2).minWidth(100).minHeight(60).layoutHeight(FILL_PARENT).layoutWidth(FILL_PARENT)
             .fontFace("Courier New").fontFamily(FontFamily.MonoSpace).fontSize(16);
     }
 
@@ -1385,13 +1600,17 @@ Theme createDefaultTheme() {
 }
 
 /// decode comma delimited dimension list or single value - and put to Rect
-Rect decodeRect(string s) {
+Rect decodeRect(string s)
+{
     uint[6] values;
     int valueCount = 0;
     int start = 0;
-    for (int i = 0; i <= s.length; i++) {
-        if (i == s.length || s[i] == ',') {
-            if (i > start) {
+    for (int i = 0; i <= s.length; i++)
+    {
+        if (i == s.length || s[i] == ',')
+        {
+            if (i > start)
+            {
                 string item = s[start .. i];
                 values[valueCount++] = decodeDimension(item);
                 if (valueCount >= 6)
@@ -1407,20 +1626,22 @@ Rect decodeRect(string s) {
     else if (valueCount == 4) // separate left, top, right, bottom
         return Rect(values[0], values[1], values[2], values[3]);
     Log.e("Invalid rect attribute value ", s);
-    return Rect(0,0,0,0);
+    return Rect(0, 0, 0, 0);
 }
 
 private import std.array : split;
 
 /// Decode color list attribute, e.g.: "#84A, #99FFFF" -> [0x8844aa, 0x99ffff]
-uint[] decodeFocusRectColors(string s) {
+uint[] decodeFocusRectColors(string s)
+{
     if (s.equal("@null"))
         return [COLOR_UNSPECIFIED];
     string[] colors = split(s, ",");
     if (colors.length < 1)
         return null;
     uint[] res = new uint[colors.length];
-    for (int i = 0; i < colors.length; i++) {
+    for (int i = 0; i < colors.length; i++)
+    {
         uint cl = decodeHexColor(colors[i], COLOR_UNSPECIFIED);
         if (cl == COLOR_UNSPECIFIED)
             return null;
@@ -1430,12 +1651,16 @@ uint[] decodeFocusRectColors(string s) {
 }
 
 /// parses string like "Left|VCenter" to bit set of Align flags
-ubyte decodeAlignment(string s) {
+ubyte decodeAlignment(string s)
+{
     ubyte res = 0;
     int start = 0;
-    for (int i = 0; i <= s.length; i++) {
-        if (i == s.length || s[i] == '|') {
-            if (i > start) {
+    for (int i = 0; i <= s.length; i++)
+    {
+        if (i == s.length || s[i] == '|')
+        {
+            if (i > start)
+            {
                 string item = s[start .. i];
                 if (item.equal("Left"))
                     res |= Align.Left;
@@ -1463,12 +1688,16 @@ ubyte decodeAlignment(string s) {
 }
 
 /// parses string like "HotKeys|UnderlineHotKeysWhenAltPressed" to bit set of TextFlag flags
-uint decodeTextFlags(string s) {
+uint decodeTextFlags(string s)
+{
     uint res = 0;
     int start = 0;
-    for (int i = 0; i <= s.length; i++) {
-        if (i == s.length || s[i] == '|') {
-            if (i > start) {
+    for (int i = 0; i <= s.length; i++)
+    {
+        if (i == s.length || s[i] == '|')
+        {
+            if (i > start)
+            {
                 string item = s[start .. i];
                 if (item.equal("HotKeys"))
                     res |= TextFlag.HotKeys;
@@ -1492,7 +1721,8 @@ uint decodeTextFlags(string s) {
 }
 
 /// decode FontFamily item name to value
-FontFamily decodeFontFamily(string s) {
+FontFamily decodeFontFamily(string s)
+{
     if (s.equal("SansSerif"))
         return FontFamily.SansSerif;
     if (s.equal("Serif"))
@@ -1510,7 +1740,8 @@ FontFamily decodeFontFamily(string s) {
 }
 
 /// decode FontWeight item name to value
-FontWeight decodeFontWeight(string s) {
+FontWeight decodeFontWeight(string s)
+{
     if (s.equal("bold"))
         return FontWeight.Bold;
     if (s.equal("normal"))
@@ -1520,7 +1751,8 @@ FontWeight decodeFontWeight(string s) {
 }
 
 /// decode layout dimension (FILL_PARENT, WRAP_CONTENT, or just size)
-int decodeLayoutDimension(string s) {
+int decodeLayoutDimension(string s)
+{
     if (s.equal("FILL_PARENT") || s.equal("fill"))
         return FILL_PARENT;
     if (s.equal("WRAP_CONTENT") || s.equal("wrap"))
@@ -1529,7 +1761,8 @@ int decodeLayoutDimension(string s) {
 }
 
 /// remove superfluous space characters from a border property
-string sanitizeBorderProperty(string s) pure {
+string sanitizeBorderProperty(string s) pure
+{
     string[] parts = s.split(',');
     foreach (ref part; parts)
         part = part.strip();
@@ -1538,29 +1771,37 @@ string sanitizeBorderProperty(string s) pure {
     char[] res;
     // replace repeating space characters with one space
     import std.ascii : isWhite;
+
     bool isSpace;
-    foreach (c; joined) {
-        if (isWhite(c)) {
-            if (!isSpace) {
+    foreach (c; joined)
+    {
+        if (isWhite(c))
+        {
+            if (!isSpace)
+            {
                 res ~= ' ';
                 isSpace = true;
             }
-        } else {
+        }
+        else
+        {
             res ~= c;
             isSpace = false;
         }
     }
 
-    return cast(string)res;
+    return cast(string) res;
 }
 
 /// remove superfluous space characters from a box shadow property
-string sanitizeBoxShadowProperty(string s) pure {
+string sanitizeBoxShadowProperty(string s) pure
+{
     return sanitizeBorderProperty(s);
 }
 
 /// load style attributes from XML element
-bool loadStyleAttributes(Style style, Element elem, bool allowStates) {
+bool loadStyleAttributes(Style style, Element elem, bool allowStates)
+{
     //Log.d("Theme: loadStyleAttributes ", style.id, " ", elem.tag.attr);
     if ("backgroundImageId" in elem.tag.attr)
         style.backgroundImageId = elem.tag.attr["backgroundImageId"];
@@ -1593,9 +1834,9 @@ bool loadStyleAttributes(Style style, Element elem, bool allowStates) {
     if ("fontFamily" in elem.tag.attr)
         style.fontFamily = decodeFontFamily(elem.tag.attr["fontFamily"]);
     if ("fontSize" in elem.tag.attr)
-        style.fontSize = cast(int)decodeDimension(elem.tag.attr["fontSize"]);
+        style.fontSize = cast(int) decodeDimension(elem.tag.attr["fontSize"]);
     if ("fontWeight" in elem.tag.attr)
-        style.fontWeight = cast(ushort)decodeFontWeight(elem.tag.attr["fontWeight"]);
+        style.fontWeight = cast(ushort) decodeFontWeight(elem.tag.attr["fontWeight"]);
     if ("layoutWidth" in elem.tag.attr)
         style.layoutWidth = decodeLayoutDimension(elem.tag.attr["layoutWidth"]);
     if ("layoutHeight" in elem.tag.attr)
@@ -1606,29 +1847,38 @@ bool loadStyleAttributes(Style style, Element elem, bool allowStates) {
         style.textFlags = decodeTextFlags(elem.tag.attr["textFlags"]);
     if ("focusRectColors" in elem.tag.attr)
         style.focusRectColors = decodeFocusRectColors(elem.tag.attr["focusRectColors"]);
-    foreach(item; elem.elements) {
-        if (allowStates && item.tag.name.equal("state")) {
+    foreach (item; elem.elements)
+    {
+        if (allowStates && item.tag.name.equal("state"))
+        {
             uint stateMask = 0;
             uint stateValue = 0;
             extractStateFlags(item.tag.attr, stateMask, stateValue);
-            if (stateMask) {
+            if (stateMask)
+            {
                 Style state = style.getOrCreateState(stateMask, stateValue);
                 loadStyleAttributes(state, item, false);
             }
-        } else if (item.tag.name.equal("drawable")) {
+        }
+        else if (item.tag.name.equal("drawable"))
+        {
             // <drawable id="scrollbar_button_up" value="scrollbar_btn_up"/>
             string drawableid = attrValue(item, "id");
             string drawablevalue = attrValue(item, "value");
             if (drawableid)
                 style.setCustomDrawable(drawableid, drawablevalue);
-        } else if (item.tag.name.equal("color")) {
+        }
+        else if (item.tag.name.equal("color"))
+        {
             // <color id="buttons_panel_color" value="#303080"/>
             string colorid = attrValue(item, "id");
             string colorvalue = attrValue(item, "value");
             uint color = decodeHexColor(colorvalue, COLOR_TRANSPARENT);
             if (colorid)
                 style.setCustomColor(colorid, color);
-        } else if (item.tag.name.equal("length")) {
+        }
+        else if (item.tag.name.equal("length"))
+        {
             // <length id="overlap" value="2"/>
             string lenid = attrValue(item, "id");
             string lenvalue = attrValue(item, "value");
@@ -1655,8 +1905,10 @@ bool loadStyleAttributes(Style style, Element elem, bool allowStates) {
  * ---
  *
  */
-bool loadTheme(Theme theme, Element doc, int level = 0) {
-    if (!doc.tag.name.equal("theme")) {
+bool loadTheme(Theme theme, Element doc, int level = 0)
+{
+    if (!doc.tag.name.equal("theme"))
+    {
         Log.e("<theme> element should be main in theme file!");
         return false;
     }
@@ -1664,24 +1916,30 @@ bool loadTheme(Theme theme, Element doc, int level = 0) {
     string id = attrValue(doc, "id");
     string parent = attrValue(doc, "parent");
     theme.id = id;
-    if (parent.length > 0) {
+    if (parent.length > 0)
+    {
         // load base theme
         if (level < 3) // to prevent infinite recursion
             loadTheme(theme, parent, level + 1);
     }
     loadStyleAttributes(theme, doc, false);
-    foreach(styleitem; doc.elements) {
-        if (styleitem.tag.name.equal("style")) {
+    foreach (styleitem; doc.elements)
+    {
+        if (styleitem.tag.name.equal("style"))
+        {
             // load <style>
             string styleid = attrValue(styleitem, "id");
             string styleparent = attrValue(styleitem, "parent");
-            if (styleid.length) {
+            if (styleid.length)
+            {
                 // create new style
                 Style parentStyle = null;
                 parentStyle = theme.get(styleparent);
                 Style style = parentStyle.createSubstyle(styleid);
                 loadStyleAttributes(style, styleitem, true);
-            } else {
+            }
+            else
+            {
                 Log.e("style without ID in theme file");
             }
         }
@@ -1690,15 +1948,19 @@ bool loadTheme(Theme theme, Element doc, int level = 0) {
 }
 
 /// load theme from file
-bool loadTheme(Theme theme, string resourceId, int level = 0) {
+bool loadTheme(Theme theme, string resourceId, int level = 0)
+{
 
     string filename;
-    try {
-        filename = drawableCache.findResource(WIDGET_STYLE_CONSOLE ? "console_" ~ resourceId : resourceId);
+    try
+    {
+        filename = drawableCache.findResource(WIDGET_STYLE_CONSOLE
+                ? "console_" ~ resourceId : resourceId);
         if (!filename || !filename.endsWith(".xml"))
             return false;
-        string s = cast(string)loadResourceBytes(filename);
-        if (!s) {
+        string s = cast(string) loadResourceBytes(filename);
+        if (!s)
+        {
             Log.e("Cannot read XML resource ", resourceId, " from file ", filename);
             return false;
         }
@@ -1710,16 +1972,20 @@ bool loadTheme(Theme theme, string resourceId, int level = 0) {
         auto doc = new Document(s);
 
         return loadTheme(theme, doc);
-    } catch (CheckException e) {
+    }
+    catch (CheckException e)
+    {
         Log.e("Invalid XML resource ", resourceId);
         return false;
     }
 }
 
 /// load theme from XML file (null if failed)
-Theme loadTheme(string resourceId) {
+Theme loadTheme(string resourceId)
+{
     Theme res = new Theme(resourceId);
-    if (loadTheme(res, resourceId)) {
+    if (loadTheme(res, resourceId))
+    {
         res.id = resourceId;
         return res;
     }
@@ -1728,7 +1994,8 @@ Theme loadTheme(string resourceId) {
 }
 
 /// custom drawable attribute container for styles
-class DrawableAttribute {
+class DrawableAttribute
+{
 protected:
     string _id;
     string _drawableId;
@@ -1736,29 +2003,52 @@ protected:
     bool _initialized;
 
 public:
-    this(string id, string drawableId) {
+    this(string id, string drawableId)
+    {
         _id = id;
         _drawableId = drawableId;
     }
-    ~this() {
+
+    ~this()
+    {
         clear();
     }
-    @property string id() const { return _id; }
-    @property string drawableId() const { return _drawableId; }
-    @property void drawableId(string newDrawable) { _drawableId = newDrawable; clear(); }
-    @property ref DrawableRef drawable() const {
-        if (!_drawable.isNull)
-            return (cast(DrawableAttribute)this)._drawable;
-        (cast(DrawableAttribute)this)._drawable = drawableCache.get(_drawableId);
-        (cast(DrawableAttribute)this)._initialized = true;
-        return (cast(DrawableAttribute)this)._drawable;
+
+    @property string id() const
+    {
+        return _id;
     }
-    void clear() {
+
+    @property string drawableId() const
+    {
+        return _drawableId;
+    }
+
+    @property void drawableId(string newDrawable)
+    {
+        _drawableId = newDrawable;
+        clear();
+    }
+
+    @property ref DrawableRef drawable() const
+    {
+        if (!_drawable.isNull)
+            return (cast(DrawableAttribute) this)._drawable;
+        (cast(DrawableAttribute) this)._drawable = drawableCache.get(_drawableId);
+        (cast(DrawableAttribute) this)._initialized = true;
+        return (cast(DrawableAttribute) this)._drawable;
+    }
+
+    void clear()
+    {
         _drawable.clear();
         _initialized = false;
     }
-    void onThemeChanged() {
-        if (!_drawableId) {
+
+    void onThemeChanged()
+    {
+        if (!_drawableId)
+        {
             _drawable.clear();
             _initialized = false;
         }
@@ -1766,19 +2056,19 @@ public:
 }
 
 /// returns custom drawable replacement id for specified id from current theme, or returns passed value if not found or no current theme
-string overrideCustomDrawableId(string id) {
+string overrideCustomDrawableId(string id)
+{
     string res = currentTheme ? currentTheme.customDrawableId(id) : id;
     return !res ? id : res;
 }
 
-shared static ~this() {
+shared static ~this()
+{
     currentTheme = null;
 }
 
-
-
-
-unittest {
+unittest
+{
     assert(sanitizeBorderProperty("   #aaa, 2  ") == "#aaa,2");
     assert(sanitizeBorderProperty("   #aaa, 2, 2, 2, 4") == "#aaa,2,2,2,4");
     assert(sanitizeBorderProperty("   #a aa  ,  2   4  ") == "#a aa,2 4");

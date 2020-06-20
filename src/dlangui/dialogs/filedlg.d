@@ -46,9 +46,9 @@ private import std.string;
 private import std.array;
 private import std.conv : to;
 
-
 /// flags for file dialog options
-enum FileDialogFlag : uint {
+enum FileDialogFlag : uint
+{
     /// file must exist (use this for open dialog)
     FileMustExist = 0x100,
     /// ask before saving to existing
@@ -65,18 +65,21 @@ enum FileDialogFlag : uint {
 }
 
 /// File dialog action codes
-enum FileDialogActions : int {
+enum FileDialogActions : int
+{
     ShowInFileManager = 4000,
     CreateDirectory = 4001,
     DeleteFile = 4002,
 }
 
 /// filetype filter entry for FileDialog
-struct FileFilterEntry {
+struct FileFilterEntry
+{
     UIString label;
     string[] filter;
     bool executableOnly;
-    this(UIString displayLabel, string filterList, bool executableOnly = false) {
+    this(UIString displayLabel, string filterList, bool executableOnly = false)
+    {
         label = displayLabel;
         if (filterList.length)
             filter = split(filterList, ";");
@@ -85,7 +88,8 @@ struct FileFilterEntry {
 }
 
 /// sorting orders for file dialog items
-enum FileListSortOrder {
+enum FileListSortOrder
+{
     NAME,
     NAME_DESC,
     SIZE_DESC,
@@ -95,7 +99,8 @@ enum FileListSortOrder {
 }
 
 /// File open / save dialog
-class FileDialog : Dialog, CustomGridCellAdapter {
+class FileDialog : Dialog, CustomGridCellAdapter
+{
     protected FilePathPanel _edPath;
     protected EditLine _edFilename;
     protected ComboBox _cbFilters;
@@ -120,10 +125,16 @@ class FileDialog : Dialog, CustomGridCellAdapter {
 
     protected string[string] _filetypeIcons;
 
-    this(UIString caption, Window parent, Action action = null, uint fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable | FileDialogFlag.FileMustExist) {
-        super(caption, parent, fileDialogFlags | (Platform.instance.uiDialogDisplayMode & DialogDisplayMode.fileDialogInPopup ? DialogFlag.Popup : 0));
+    this(UIString caption, Window parent, Action action = null,
+            uint fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable
+            | FileDialogFlag.FileMustExist)
+    {
+        super(caption, parent,
+                fileDialogFlags | (Platform.instance.uiDialogDisplayMode & DialogDisplayMode.fileDialogInPopup
+                    ? DialogFlag.Popup : 0));
         _isOpenDialog = !(_flags & FileDialogFlag.ConfirmOverwrite);
-        if (action is null) {
+        if (action is null)
+        {
             if (fileDialogFlags & FileDialogFlag.SelectDirectory)
                 action = ACTION_OPEN_DIRECTORY.clone();
             else if (_isOpenDialog)
@@ -135,101 +146,124 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// mapping of file extension to icon resource name, e.g. ".txt": "text-plain"
-    @property ref string[string] filetypeIcons() { return _filetypeIcons; }
+    @property ref string[string] filetypeIcons()
+    {
+        return _filetypeIcons;
+    }
 
     /// filter list for file type filter combo box
-    @property FileFilterEntry[] filters() {
+    @property FileFilterEntry[] filters()
+    {
         return _filters;
     }
 
     /// filter list for file type filter combo box
-    @property void filters(FileFilterEntry[] values) {
+    @property void filters(FileFilterEntry[] values)
+    {
         _filters = values;
     }
 
     /// add new filter entry
-    void addFilter(FileFilterEntry value) {
+    void addFilter(FileFilterEntry value)
+    {
         _filters ~= value;
     }
 
     /// filter index
-    @property int filterIndex() {
+    @property int filterIndex()
+    {
         return _filterIndex;
     }
 
     /// filter index
-    @property void filterIndex(int index) {
+    @property void filterIndex(int index)
+    {
         _filterIndex = index;
     }
 
     /// the path to the directory whose files should be displayed
-    @property string path() {
+    @property string path()
+    {
         return _path;
     }
 
-    @property void path(string s) {
+    @property void path(string s)
+    {
         _path = s;
     }
 
     /// the name of the file or directory that is currently selected
-    @property string filename() {
+    @property string filename()
+    {
         return _filename;
     }
 
-    @property void filename(string s) {
+    @property void filename(string s)
+    {
         _filename = s;
     }
 
     /// all the selected filenames
-    @property string[] filenames() {
+    @property string[] filenames()
+    {
         string[] res;
         res.reserve(_fileList.selection.length);
         int i = 0;
-        foreach (val; _fileList.selection) {
+        foreach (val; _fileList.selection)
+        {
             res ~= _entries[val.y];
             ++i;
         }
         return res;
     }
 
-    @property bool showHiddenFiles() {
+    @property bool showHiddenFiles()
+    {
         return _showHiddenFiles;
     }
 
-    @property void showHiddenFiles(bool b) {
+    @property void showHiddenFiles(bool b)
+    {
         _showHiddenFiles = b;
     }
 
-    @property bool allowMultipleFiles() {
+    @property bool allowMultipleFiles()
+    {
         return _allowMultipleFiles;
     }
 
-    @property void allowMultipleFiles(bool b) {
+    @property void allowMultipleFiles(bool b)
+    {
         _allowMultipleFiles = b;
     }
 
     /// return currently selected filter value - array of patterns like ["*.txt", "*.rtf"]
-    @property string[] selectedFilter() {
+    @property string[] selectedFilter()
+    {
         if (_filterIndex >= 0 && _filterIndex < _filters.length)
             return _filters[_filterIndex].filter;
         return null;
     }
 
-    @property bool executableFilterSelected() {
+    @property bool executableFilterSelected()
+    {
         if (_filterIndex >= 0 && _filterIndex < _filters.length)
             return _filters[_filterIndex].executableOnly;
         return false;
     }
 
-    protected bool upLevel() {
+    protected bool upLevel()
+    {
         return openDirectory(parentDir(_path), _path);
     }
 
-    protected bool reopenDirectory() {
+    protected bool reopenDirectory()
+    {
         return openDirectory(_path, null);
     }
 
-    protected void locateFileInList(dstring pattern) {
+    protected void locateFileInList(dstring pattern)
+    {
         if (!pattern.length)
             return;
         int selection = _fileList.row;
@@ -238,24 +272,30 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         int index = -1; // first matched item
         string mask = pattern.toUTF8;
         // search forward from current row to end of list
-        for(int i = selection; i < _entries.length; i++) {
+        for (int i = selection; i < _entries.length; i++)
+        {
             string fname = baseName(_entries[i].name);
-            if (fname.startsWith(mask)) {
+            if (fname.startsWith(mask))
+            {
                 index = i;
                 break;
             }
         }
-        if (index < 0) {
+        if (index < 0)
+        {
             // search from beginning of list to current position
-            for(int i = 0; i < selection && i < _entries.length; i++) {
+            for (int i = 0; i < selection && i < _entries.length; i++)
+            {
                 string fname = baseName(_entries[i].name);
-                if (fname.startsWith(mask)) {
+                if (fname.startsWith(mask))
+                {
                     index = i;
                     break;
                 }
             }
         }
-        if (index >= 0) {
+        if (index >= 0)
+        {
             // move selection
             _fileList.selectCell(1, index + 1);
             window.update();
@@ -263,20 +303,25 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// change sort order after clicking on column col
-    protected void changeSortOrder(int col) {
+    protected void changeSortOrder(int col)
+    {
         assert(col >= 2 && col <= 4);
         // 2=NAME, 3=SIZE, 4=MODIFIED
         col -= 2;
         int n = col * 2;
-        if ((n & 0xFE) == ((cast(int)_sortOrder) & 0xFE)) {
+        if ((n & 0xFE) == ((cast(int) _sortOrder) & 0xFE))
+        {
             // invert DESC / ASC if clicked same column as in current sorting order
             _sortOrder = cast(FileListSortOrder)(_sortOrder ^ 1);
-        } else {
-            _sortOrder = cast(FileListSortOrder)n;
+        }
+        else
+        {
+            _sortOrder = cast(FileListSortOrder) n;
         }
         string selectedItemPath;
         int currentRow = _fileList.row;
-        if (currentRow >= 0 && currentRow < _entries.length) {
+        if (currentRow >= 0 && currentRow < _entries.length)
+        {
             selectedItemPath = _entries[currentRow].name;
         }
         updateColumnHeaders();
@@ -288,100 +333,128 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// predicate for sorting items - NAME
-    static bool compareItemsByName(ref DirEntry item1, ref DirEntry item2) {
-        return ((item1.isDir && !item2.isDir) || ((item1.isDir == item2.isDir) && (item1.name < item2.name)));
+    static bool compareItemsByName(ref DirEntry item1, ref DirEntry item2)
+    {
+        return ((item1.isDir && !item2.isDir) || ((item1.isDir == item2.isDir)
+                && (item1.name < item2.name)));
     }
     /// predicate for sorting items - NAME DESC
-    static bool compareItemsByNameDesc(ref DirEntry item1, ref DirEntry item2) {
-        return ((item1.isDir && !item2.isDir) || ((item1.isDir == item2.isDir) && (item1.name > item2.name)));
+    static bool compareItemsByNameDesc(ref DirEntry item1, ref DirEntry item2)
+    {
+        return ((item1.isDir && !item2.isDir) || ((item1.isDir == item2.isDir)
+                && (item1.name > item2.name)));
     }
     /// predicate for sorting items - SIZE
-    static bool compareItemsBySize(ref DirEntry item1, ref DirEntry item2) {
-        return ((item1.isDir && !item2.isDir) 
-                || ((item1.isDir && item2.isDir) && (item1.name < item2.name))
-                || ((!item1.isDir && !item2.isDir) && (item1.size < item2.size))
-                );
+    static bool compareItemsBySize(ref DirEntry item1, ref DirEntry item2)
+    {
+        return ((item1.isDir && !item2.isDir) || ((item1.isDir && item2.isDir)
+                && (item1.name < item2.name)) || ((!item1.isDir
+                && !item2.isDir) && (item1.size < item2.size)));
     }
     /// predicate for sorting items - SIZE DESC
-    static bool compareItemsBySizeDesc(ref DirEntry item1, ref DirEntry item2) {
-        return ((item1.isDir && !item2.isDir) 
-                || ((item1.isDir && item2.isDir) && (item1.name < item2.name))
-                || ((!item1.isDir && !item2.isDir) && (item1.size > item2.size))
-                );
+    static bool compareItemsBySizeDesc(ref DirEntry item1, ref DirEntry item2)
+    {
+        return ((item1.isDir && !item2.isDir) || ((item1.isDir && item2.isDir)
+                && (item1.name < item2.name)) || ((!item1.isDir
+                && !item2.isDir) && (item1.size > item2.size)));
     }
     /// predicate for sorting items - TIMESTAMP
-    static bool compareItemsByTimestamp(ref DirEntry item1, ref DirEntry item2) {
-        try {
+    static bool compareItemsByTimestamp(ref DirEntry item1, ref DirEntry item2)
+    {
+        try
+        {
             return item1.timeLastModified < item2.timeLastModified;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return false;
         }
     }
     /// predicate for sorting items - TIMESTAMP DESC
-    static bool compareItemsByTimestampDesc(ref DirEntry item1, ref DirEntry item2) {
-        try {
+    static bool compareItemsByTimestampDesc(ref DirEntry item1, ref DirEntry item2)
+    {
+        try
+        {
             return item1.timeLastModified > item2.timeLastModified;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return false;
         }
     }
 
     /// sort entries according to _sortOrder
-    protected void sortEntries() {
+    protected void sortEntries()
+    {
         if (_entries.length < 1)
             return;
-        DirEntry[] entriesToSort = _entries[0..$];
-        if (_entries.length > 0) {
+        DirEntry[] entriesToSort = _entries[0 .. $];
+        if (_entries.length > 0)
+        {
             string fname = baseName(_entries[0].name);
-            if (fname == "..") {
-                entriesToSort = _entries[1..$];
+            if (fname == "..")
+            {
+                entriesToSort = _entries[1 .. $];
             }
         }
         import std.algorithm.sorting : sort;
-        switch(_sortOrder) with(FileListSortOrder) {
-            default:
-            case NAME:
-                sort!compareItemsByName(entriesToSort);
-                break;
-            case NAME_DESC:
-                sort!compareItemsByNameDesc(entriesToSort);
-                break;
-            case SIZE:
-                sort!compareItemsBySize(entriesToSort);
-                break;
-            case SIZE_DESC:
-                sort!compareItemsBySizeDesc(entriesToSort);
-                break;
-            case TIMESTAMP:
-                sort!compareItemsByTimestamp(entriesToSort);
-                break;
-            case TIMESTAMP_DESC:
-                sort!compareItemsByTimestampDesc(entriesToSort);
-                break;
+
+        switch (_sortOrder) with (FileListSortOrder)
+        {
+        default:
+        case NAME:
+            sort!compareItemsByName(entriesToSort);
+            break;
+        case NAME_DESC:
+            sort!compareItemsByNameDesc(entriesToSort);
+            break;
+        case SIZE:
+            sort!compareItemsBySize(entriesToSort);
+            break;
+        case SIZE_DESC:
+            sort!compareItemsBySizeDesc(entriesToSort);
+            break;
+        case TIMESTAMP:
+            sort!compareItemsByTimestamp(entriesToSort);
+            break;
+        case TIMESTAMP_DESC:
+            sort!compareItemsByTimestampDesc(entriesToSort);
+            break;
         }
     }
 
-    protected string formatTimestamp(ref DirEntry f) {
+    protected string formatTimestamp(ref DirEntry f)
+    {
         import std.datetime : SysTime;
         import std.typecons : Nullable;
+
         Nullable!SysTime ts;
-        try {
+        try
+        {
             ts = f.timeLastModified;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             Log.w(e.msg);
         }
-        if (ts.isNull) {
+        if (ts.isNull)
+        {
             return "----.--.-- --:--";
-        } else {
+        }
+        else
+        {
             //date = "%04d.%02d.%02d %02d:%02d:%02d".format(ts.year, ts.month, ts.day, ts.hour, ts.minute, ts.second);
-            return "%04d.%02d.%02d %02d:%02d".format(ts.year, ts.month, ts.day, ts.hour, ts.minute);
+            return "%04d.%02d.%02d %02d:%02d".format(ts.get.year, ts.get.month,
+                    ts.get.day, ts.get.hour, ts.get.minute);
         }
     }
 
-    protected int entriesToCells(string selectedItemPath) {
-        _fileList.rows = cast(int)_entries.length;
+    protected int entriesToCells(string selectedItemPath)
+    {
+        _fileList.rows = cast(int) _entries.length;
         int selectionIndex = -1;
-        for (int i = 0; i < _entries.length; i++) {
+        for (int i = 0; i < _entries.length; i++)
+        {
             if (_entries[i].name.equal(selectedItemPath))
                 selectionIndex = i;
             string fname = baseName(_entries[i].name);
@@ -389,11 +462,14 @@ class FileDialog : Dialog, CustomGridCellAdapter {
             string date;
             bool d = _entries[i].isDir;
             _fileList.setCellText(1, i, toUTF32(fname));
-            if (d) {
+            if (d)
+            {
                 _fileList.setCellText(0, i, "folder");
                 if (fname != "..")
                     date = formatTimestamp(_entries[i]);
-            } else {
+            }
+            else
+            {
                 string ext = extension(fname);
                 string resname;
                 if (ext in _filetypeIcons)
@@ -404,27 +480,33 @@ class FileDialog : Dialog, CustomGridCellAdapter {
                     resname = "text-plain";
                 _fileList.setCellText(0, i, toUTF32(resname));
                 double size = double.nan;
-                try {
+                try
+                {
                     size = _entries[i].size;
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     Log.w(e.msg);
                 }
                 import std.math : isNaN;
+
                 if (size.isNaN)
                     sz = "--";
-                else {
+                else
+                {
                     import std.format : format;
-                    sz = size < 1024 ? to!string(size) ~ " B" :
-                    (size < 1024*1024 ? "%.1f".format(size/1024) ~ " KB" :
-                     (size < 1024*1024*1024 ? "%.1f".format(size/(1024*1024)) ~ " MB" :
-                      "%.1f".format(size/(1024*1024*1024)) ~ " GB"));
+
+                    sz = size < 1024 ? to!string(size) ~ " B" : (size < 1024 * 1024
+                            ? "%.1f".format(size / 1024) ~ " KB" : (size < 1024 * 1024 * 1024
+                                ? "%.1f".format(size / (1024 * 1024)) ~ " MB" : "%.1f".format(
+                                size / (1024 * 1024 * 1024)) ~ " GB"));
                 }
                 date = formatTimestamp(_entries[i]);
             }
             _fileList.setCellText(2, i, toUTF32(sz));
             _fileList.setCellText(3, i, toUTF32(date));
         }
-        if(_fileList.height > 0)
+        if (_fileList.height > 0)
             _fileList.scrollTo(0, 0);
 
         autofitGrid();
@@ -435,18 +517,24 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         return selectionIndex;
     }
 
-    protected bool openDirectory(string dir, string selectedItemPath) {
+    protected bool openDirectory(string dir, string selectedItemPath)
+    {
         dir = buildNormalizedPath(dir);
         Log.d("FileDialog.openDirectory(", dir, ")");
         DirEntry[] entries;
 
-        auto attrFilter = (showHiddenFiles ? AttrFilter.all : AttrFilter.allVisible) | AttrFilter.special | AttrFilter.parent;
-        if (executableFilterSelected()) {
+        auto attrFilter = (showHiddenFiles ? AttrFilter.all : AttrFilter.allVisible)
+            | AttrFilter.special | AttrFilter.parent;
+        if (executableFilterSelected())
+        {
             attrFilter |= AttrFilter.executable;
         }
-        try {
+        try
+        {
             _entries = listDirectory(dir, attrFilter, selectedFilter());
-        } catch(Exception e) {
+        }
+        catch (Exception e)
+        {
             Log.e("Cannot list directory " ~ dir, e);
             //import dlangui.dialogs.msgbox;
             //auto msgBox = new MessageBox(UIString.fromId("MESSAGE_ERROR"c), UIString.fromRaw(e.msg.toUTF32), window());
@@ -462,15 +550,19 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         return true;
     }
 
-    void autofitGrid() {
+    void autofitGrid()
+    {
         _fileList.autoFitColumnWidths();
         //_fileList.setColWidth(1, 0);
         _fileList.fillColumnWidth(1);
     }
 
-    override bool onKeyEvent(KeyEvent event) {
-        if (event.action == KeyAction.KeyDown) {
-            if (event.keyCode == KeyCode.BACK && event.flags == 0) {
+    override bool onKeyEvent(KeyEvent event)
+    {
+        if (event.action == KeyAction.KeyDown)
+        {
+            if (event.keyCode == KeyCode.BACK && event.flags == 0)
+            {
                 upLevel();
                 return true;
             }
@@ -479,13 +571,15 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// return true for custom drawn cell
-    override bool isCustomCell(int col, int row) {
+    override bool isCustomCell(int col, int row)
+    {
         if ((col == 0 || col == 1) && row >= 0)
             return true;
         return false;
     }
 
-    protected DrawableRef rowIcon(int row) {
+    protected DrawableRef rowIcon(int row)
+    {
         string iconId = toUTF8(_fileList.cellText(0, row));
         DrawableRef res;
         if (iconId.length)
@@ -494,8 +588,10 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// return cell size
-    override Point measureCell(int col, int row) {
-        if (col == 1) {
+    override Point measureCell(int col, int row)
+    {
+        if (col == 1)
+        {
             FontRef fnt = _fileList.font;
             dstring txt = _fileList.cellText(col, row);
             Point sz = fnt.textSize(txt);
@@ -505,7 +601,8 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         }
         if (WIDGET_STYLE_CONSOLE)
             return Point(0, 0);
-        else {
+        else
+        {
             DrawableRef icon = rowIcon(row);
             if (icon.isNull)
                 return Point(0, 0);
@@ -514,8 +611,10 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// draw data cell content
-    override void drawCell(DrawBuf buf, Rect rc, int col, int row) {
-        if (col == 1) {
+    override void drawCell(DrawBuf buf, Rect rc, int col, int row)
+    {
+        if (col == 1)
+        {
             if (BACKEND_GUI)
                 rc.shrink(2, 1);
             else
@@ -534,7 +633,8 @@ class FileDialog : Dialog, CustomGridCellAdapter {
             return;
         }
         DrawableRef img = rowIcon(row);
-        if (!img.isNull) {
+        if (!img.isNull)
+        {
             Point sz;
             sz.x = img.width;
             sz.y = img.height;
@@ -544,13 +644,16 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         }
     }
 
-    protected ListWidget createRootsList() {
+    protected ListWidget createRootsList()
+    {
         ListWidget res = new ListWidget("ROOTS_LIST");
         res.styleId = STYLE_LIST_BOX;
         WidgetListAdapter adapter = new WidgetListAdapter();
-        foreach(ref RootEntry root; _roots) {
+        foreach (ref RootEntry root; _roots)
+        {
             ImageTextButton btn = new ImageTextButton(null, root.icon, root.label);
-            static if (WIDGET_STYLE_CONSOLE) btn.margins = Rect(1, 1, 0, 0);
+            static if (WIDGET_STYLE_CONSOLE)
+                btn.margins = Rect(1, 1, 0, 0);
             btn.orientation = Orientation.Vertical;
             btn.styleId = STYLE_TRANSPARENT_BUTTON_BACKGROUND;
             btn.focusable = false;
@@ -570,17 +673,23 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// file list item activated (double clicked or Enter key pressed)
-    protected void onItemActivated(int index) {
+    protected void onItemActivated(int index)
+    {
         DirEntry e = _entries[index];
-        if (e.isDir) {
+        if (e.isDir)
+        {
             openDirectory(e.name, _path);
-        } else if (e.isFile) {
+        }
+        else if (e.isFile)
+        {
             string fname = e.name;
-            if ((_flags & FileDialogFlag.ConfirmOverwrite) && exists(fname) && isFile(fname)) {
+            if ((_flags & FileDialogFlag.ConfirmOverwrite) && exists(fname) && isFile(fname))
+            {
                 showConfirmOverwriteQuestion(fname);
                 return;
             }
-            else {
+            else
+            {
                 Action result = _action;
                 result.stringParam = fname;
                 close(result);
@@ -589,77 +698,103 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// file list item selected
-    protected void onItemSelected(int index) {
+    protected void onItemSelected(int index)
+    {
         DirEntry e = _entries[index];
         string fname = e.name;
         _edFilename.text = toUTF32(baseName(fname));
         _filename = fname;
     }
 
-    protected void createAndEnterDirectory(string name) {
+    protected void createAndEnterDirectory(string name)
+    {
         string newdir = buildNormalizedPath(_path, name);
-        try {
+        try
+        {
             mkdirRecurse(newdir);
             openDirectory(newdir, null);
-        } catch (Exception e) {
-            window.showMessageBox(UIString.fromId("CREATE_FOLDER_ERROR_TITLE"c), UIString.fromId("CREATE_FOLDER_ERROR_MESSAGE"c));
+        }
+        catch (Exception e)
+        {
+            window.showMessageBox(UIString.fromId("CREATE_FOLDER_ERROR_TITLE"c),
+                    UIString.fromId("CREATE_FOLDER_ERROR_MESSAGE"c));
         }
     }
 
     /// calls close with default action; returns true if default action is found and invoked
-    override protected bool closeWithDefaultAction() {
+    override protected bool closeWithDefaultAction()
+    {
         return handleAction(_action);
     }
 
     /// Custom handling of actions
-    override bool handleAction(const Action action) {
-        if (action.id == StandardAction.Cancel) {
+    override bool handleAction(const Action action)
+    {
+        if (action.id == StandardAction.Cancel)
+        {
             super.handleAction(action);
             return true;
         }
-        if (action.id == FileDialogActions.ShowInFileManager) {
+        if (action.id == FileDialogActions.ShowInFileManager)
+        {
             Platform.instance.showInFileManager(action.stringParam);
             return true;
         }
-        if (action.id == StandardAction.CreateDirectory) {
+        if (action.id == StandardAction.CreateDirectory)
+        {
             // show editor popup
-            window.showInputBox(UIString.fromId("CREATE_NEW_FOLDER"c), UIString.fromId("INPUT_NAME_FOR_FOLDER"c), ""d, delegate(dstring s) {
+            window.showInputBox(UIString.fromId("CREATE_NEW_FOLDER"c),
+                    UIString.fromId("INPUT_NAME_FOR_FOLDER"c), ""d, delegate(dstring s) {
                 if (!s.empty)
                     createAndEnterDirectory(toUTF8(s));
             });
             return true;
         }
-        if (action.id == StandardAction.Open || action.id == StandardAction.OpenDirectory || action.id == StandardAction.Save) {
+        if (action.id == StandardAction.Open
+                || action.id == StandardAction.OpenDirectory || action.id == StandardAction.Save)
+        {
             auto baseFilename = toUTF8(_edFilename.text);
             if (action.id == StandardAction.OpenDirectory)
                 _filename = _path ~ dirSeparator;
             else
                 _filename = _path ~ dirSeparator ~ baseFilename;
 
-            if (action.id != StandardAction.OpenDirectory && exists(_filename) && isDir(_filename)) {
+            if (action.id != StandardAction.OpenDirectory && exists(_filename) && isDir(_filename))
+            {
                 // directory name in _edFileName.text but we need file so open directory
                 openDirectory(_filename, null);
                 return true;
-            } else if (baseFilename.length > 0) {
+            }
+            else if (baseFilename.length > 0)
+            {
                 Action result = _action;
                 result.stringParam = _filename;
                 // success if either selected dir & has to open dir or if selected file
-                if (action.id == StandardAction.OpenDirectory && exists(_filename) && isDir(_filename)) {
+                if (action.id == StandardAction.OpenDirectory
+                        && exists(_filename) && isDir(_filename))
+                {
                     close(result);
                     return true;
                 }
-                else if (action.id == StandardAction.Save && !(_flags & FileDialogFlag.FileMustExist)) {
+                else if (action.id == StandardAction.Save
+                        && !(_flags & FileDialogFlag.FileMustExist))
+                {
                     // save dialog
-                    if ((_flags & FileDialogFlag.ConfirmOverwrite) && exists(_filename) && isFile(_filename)) {
+                    if ((_flags & FileDialogFlag.ConfirmOverwrite)
+                            && exists(_filename) && isFile(_filename))
+                    {
                         showConfirmOverwriteQuestion(_filename);
                         return true;
                     }
-                    else {
+                    else
+                    {
                         close(result);
                         return true;
                     }
                 }
-                else if (!(_flags & FileDialogFlag.FileMustExist) || (exists(_filename) && isFile(_filename))) {
+                else if (!(_flags & FileDialogFlag.FileMustExist)
+                        || (exists(_filename) && isFile(_filename)))
+                {
                     // open dialog
                     close(result);
                     return true;
@@ -670,9 +805,14 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// shows question "override file?"
-    protected void showConfirmOverwriteQuestion(string fileName) {
-        window.showMessageBox(UIString.fromId("CONFIRM_OVERWRITE_TITLE"c).value, format(UIString.fromId("CONFIRM_OVERWRITE_FILE_NAMED_%s_QUESTION"c).value, baseName(fileName)), [ACTION_YES, ACTION_NO], 1, delegate bool(const Action a) {
-            if (a.id == StandardAction.Yes) {
+    protected void showConfirmOverwriteQuestion(string fileName)
+    {
+        window.showMessageBox(UIString.fromId("CONFIRM_OVERWRITE_TITLE"c).value,
+                format(UIString.fromId("CONFIRM_OVERWRITE_FILE_NAMED_%s_QUESTION"c)
+                    .value, baseName(fileName)), [ACTION_YES, ACTION_NO], 1,
+                delegate bool(const Action a) {
+            if (a.id == StandardAction.Yes)
+            {
                 Action result = _action;
                 result.stringParam = fileName;
                 close(result);
@@ -681,27 +821,34 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         });
     }
 
-    bool onPathSelected(string path) {
+    bool onPathSelected(string path)
+    {
         //
         return openDirectory(path, null);
     }
 
-    protected MenuItem getCellPopupMenu(GridWidgetBase source, int col, int row) {
-        if (row >= 0 && row < _entries.length) {
+    protected MenuItem getCellPopupMenu(GridWidgetBase source, int col, int row)
+    {
+        if (row >= 0 && row < _entries.length)
+        {
             MenuItem item = new MenuItem();
             DirEntry e = _entries[row];
             // show in explorer action
-            auto showAction = new Action(FileDialogActions.ShowInFileManager, "ACTION_FILE_SHOW_IN_FILE_MANAGER"c);
+            auto showAction = new Action(FileDialogActions.ShowInFileManager,
+                    "ACTION_FILE_SHOW_IN_FILE_MANAGER"c);
             showAction.stringParam = e.name;
             item.add(showAction);
             // create directory action
             if (_flags & FileDialogFlag.EnableCreateDirectory)
                 item.add(ACTION_CREATE_DIRECTORY);
 
-            if (e.isDir) {
+            if (e.isDir)
+            {
                 //_edFilename.text = ""d;
                 //_filename = "";
-            } else if (e.isFile) {
+            }
+            else if (e.isFile)
+            {
                 //string fname = e.name;
                 //_edFilename.text = toUTF32(baseName(fname));
                 //_filename = fname;
@@ -712,10 +859,11 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// override to implement creation of dialog controls
-    override void initialize() {
+    override void initialize()
+    {
         // remember filename specified by user, file grid initialization can change it
         string defaultFilename = _filename;
-        
+
         _roots = getRootPaths() ~ getBookmarkPaths();
 
         layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).minWidth(WIDGET_STYLE_CONSOLE ? 50 : 600);
@@ -724,7 +872,6 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         LinearLayout content = new HorizontalLayout("dlgcontent");
 
         content.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT); //.minWidth(400).minHeight(300);
-
 
         //leftPanel = new VerticalLayout("places");
         //leftPanel.addChild(createRootsList());
@@ -749,15 +896,17 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         _edFilename = new EditLine("filename");
         _edFilename.layoutWidth(FILL_PARENT);
         _edFilename.setDefaultPopupMenu();
-        if (_flags & FileDialogFlag.SelectDirectory) {
+        if (_flags & FileDialogFlag.SelectDirectory)
+        {
             _edFilename.visibility = Visibility.Gone;
         }
 
         //_edFilename.layoutWeight = 0;
         fnlayout.addChild(_edFilename);
-        if (_filters.length) {
+        if (_filters.length)
+        {
             dstring[] filterLabels;
-            foreach(f; _filters)
+            foreach (f; _filters)
                 filterLabels ~= f.label.value;
             _cbFilters = new ComboBox("filter", filterLabels);
             _cbFilters.selectedItemIndex = _filterIndex;
@@ -800,12 +949,17 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         rightPanel.addChild(_fileList);
         rightPanel.addChild(fnlayout);
 
-
         addChild(content);
-        if (_flags & FileDialogFlag.EnableCreateDirectory) {
-            addChild(createButtonsPanel([ACTION_CREATE_DIRECTORY, cast(immutable)_action, ACTION_CANCEL], 1, 1));
-        } else {
-            addChild(createButtonsPanel([cast(immutable)_action, ACTION_CANCEL], 0, 0));
+        if (_flags & FileDialogFlag.EnableCreateDirectory)
+        {
+            addChild(createButtonsPanel([
+                        ACTION_CREATE_DIRECTORY, cast(immutable) _action,
+                        ACTION_CANCEL
+                    ], 1, 1));
+        }
+        else
+        {
+            addChild(createButtonsPanel([cast(immutable) _action, ACTION_CANCEL], 0, 0));
         }
 
         _fileList.customCellAdapter = this;
@@ -816,7 +970,8 @@ class FileDialog : Dialog, CustomGridCellAdapter {
             onItemSelected(row);
         };
 
-        if (_path.empty || !_path.exists || !_path.isDir) {
+        if (_path.empty || !_path.exists || !_path.isDir)
+        {
             _path = currentDir;
             if (!_path.exists || !_path.isDir)
                 _path = homePath;
@@ -830,7 +985,9 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     }
 
     /// get sort order suffix for column title
-    protected dstring appendSortOrderSuffix(dstring columnName, FileListSortOrder arrowUp, FileListSortOrder arrowDown) {
+    protected dstring appendSortOrderSuffix(dstring columnName,
+            FileListSortOrder arrowUp, FileListSortOrder arrowDown)
+    {
         if (_sortOrder == arrowUp)
             return columnName ~ " ▲";
         if (_sortOrder == arrowDown)
@@ -838,15 +995,21 @@ class FileDialog : Dialog, CustomGridCellAdapter {
         return columnName;
     }
 
-    protected void updateColumnHeaders() {
-        _fileList.setColTitle(1, appendSortOrderSuffix(UIString.fromId("COL_NAME"c).value, FileListSortOrder.NAME_DESC, FileListSortOrder.NAME));
-        _fileList.setColTitle(2, appendSortOrderSuffix(UIString.fromId("COL_SIZE"c).value, FileListSortOrder.SIZE_DESC, FileListSortOrder.SIZE));
-        _fileList.setColTitle(3, appendSortOrderSuffix(UIString.fromId("COL_MODIFIED"c).value, FileListSortOrder.TIMESTAMP_DESC, FileListSortOrder.TIMESTAMP));
+    protected void updateColumnHeaders()
+    {
+        _fileList.setColTitle(1, appendSortOrderSuffix(UIString.fromId("COL_NAME"c)
+                .value, FileListSortOrder.NAME_DESC, FileListSortOrder.NAME));
+        _fileList.setColTitle(2, appendSortOrderSuffix(UIString.fromId("COL_SIZE"c)
+                .value, FileListSortOrder.SIZE_DESC, FileListSortOrder.SIZE));
+        _fileList.setColTitle(3, appendSortOrderSuffix(UIString.fromId("COL_MODIFIED"c)
+                .value, FileListSortOrder.TIMESTAMP_DESC, FileListSortOrder.TIMESTAMP));
     }
 
-    protected void onHeaderCellClicked(GridWidgetBase source, int col, int row) {
+    protected void onHeaderCellClicked(GridWidgetBase source, int col, int row)
+    {
         debug Log.d("onHeaderCellClicked col=", col, " row=", row);
-        if (row == 0 && col >= 2 && col <= 4) {
+        if (row == 0 && col >= 2 && col <= 4)
+        {
             // 2=NAME, 3=SIZE, 4=MODIFIED
             changeSortOrder(col);
         }
@@ -855,11 +1018,11 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     protected TextTypingShortcutHelper _shortcutHelper;
 
     /// Set widget rectangle to specified value and layout widget contents. (Step 2 of two phase layout).
-    override void layout(Rect rc) {
+    override void layout(Rect rc)
+    {
         super.layout(rc);
         autofitGrid();
     }
-
 
     ///// Measure widget according to desired width and height constraints. (Step 1 of two phase layout).
     //override void measure(int parentWidth, int parentHeight) {
@@ -875,21 +1038,25 @@ class FileDialog : Dialog, CustomGridCellAdapter {
     //    Log.d("this id=", id, " measuredHeight=", measuredHeight);
     //}
 
-    override void onShow() {
+    override void onShow()
+    {
         _fileList.setFocus();
     }
 }
 
-interface OnPathSelectionHandler {
+interface OnPathSelectionHandler
+{
     bool onPathSelected(string path);
 }
 
-class FilePathPanelItem : HorizontalLayout {
+class FilePathPanelItem : HorizontalLayout
+{
     protected string _path;
     protected TextWidget _text;
     protected ImageButton _button;
     Listener!OnPathSelectionHandler onPathSelectionListener;
-    this(string path) {
+    this(string path)
+    {
         super(null);
         styleId = STYLE_LIST_ITEM;
         _path = path;
@@ -912,26 +1079,33 @@ class FilePathPanelItem : HorizontalLayout {
         margins(Rect(2.pointsToPixels + 1, 0, 2.pointsToPixels + 1, 0));
     }
 
-    private bool onTextClick(Widget src) {
+    private bool onTextClick(Widget src)
+    {
         if (onPathSelectionListener.assigned)
             return onPathSelectionListener(_path);
         return false;
     }
-    private bool onButtonClick(Widget src) {
+
+    private bool onButtonClick(Widget src)
+    {
         // show popup menu with subdirs
         string[] filters;
         DirEntry[] entries;
-        try {
+        try
+        {
             AttrFilter attrFilter = AttrFilter.dirs | AttrFilter.parent;
             entries = listDirectory(_path, attrFilter);
-        } catch(Exception e) {
+        }
+        catch (Exception e)
+        {
             return false;
         }
         if (entries.length == 0)
             return false;
         MenuItem dirs = new MenuItem();
         int itemId = 25000;
-        foreach(ref DirEntry e; entries) {
+        foreach (ref DirEntry e; entries)
+        {
             string fullPath = e.name;
             string d = baseName(fullPath);
             Action a = new Action(itemId++, toUTF32(d));
@@ -952,36 +1126,46 @@ class FilePathPanelItem : HorizontalLayout {
 }
 
 /// Panel with buttons - path segments - for fast navigation to subdirs.
-class FilePathPanelButtons : WidgetGroupDefaultDrawing {
+class FilePathPanelButtons : WidgetGroupDefaultDrawing
+{
     protected string _path;
     Listener!OnPathSelectionHandler onPathSelectionListener;
-    protected bool onPathSelected(string path) {
-        if (onPathSelectionListener.assigned) {
+    protected bool onPathSelected(string path)
+    {
+        if (onPathSelectionListener.assigned)
+        {
             return onPathSelectionListener(path);
         }
         return false;
     }
-    this(string ID = null) {
+
+    this(string ID = null)
+    {
         super(ID);
         layoutWidth = FILL_PARENT;
         clickable = true;
     }
-    protected void initialize(string path) {
+
+    protected void initialize(string path)
+    {
         _path = path;
         _children.clear();
         string itemPath = path;
-        for (;;) {
+        for (;;)
+        {
             FilePathPanelItem item = new FilePathPanelItem(itemPath);
             item.onPathSelectionListener = &onPathSelected;
             addChild(item);
-            if (isRoot(itemPath)) {
+            if (isRoot(itemPath))
+            {
                 break;
             }
             itemPath = parentDir(itemPath);
         }
     }
     /// Measure widget according to desired width and height constraints. (Step 1 of two phase layout).
-    override void measure(int parentWidth, int parentHeight) {
+    override void measure(int parentWidth, int parentHeight)
+    {
         Rect m = margins;
         Rect p = padding;
 
@@ -1003,12 +1187,14 @@ class FilePathPanelButtons : WidgetGroupDefaultDrawing {
         sz.x += reservedForEmptySpace;
         // measure children
         bool exceeded = false;
-        for (int i = 0; i < _children.count; i++) {
+        for (int i = 0; i < _children.count; i++)
+        {
             Widget item = _children.get(i);
             item.measure(pwidth, pheight);
             if (sz.y < item.measuredHeight)
                 sz.y = item.measuredHeight;
-            if (sz.x + item.measuredWidth > pwidth) {
+            if (sz.x + item.measuredWidth > pwidth)
+            {
                 exceeded = true;
             }
             if (!exceeded || i == 0) // at least one item must be measured
@@ -1017,10 +1203,12 @@ class FilePathPanelButtons : WidgetGroupDefaultDrawing {
         measuredContent(parentWidth, parentHeight, sz.x, sz.y);
     }
     /// Set widget rectangle to specified value and layout widget contents. (Step 2 of two phase layout).
-    override void layout(Rect rc) {
+    override void layout(Rect rc)
+    {
         //Log.d("tabControl.layout enter");
         _needLayout = false;
-        if (visibility == Visibility.Gone) {
+        if (visibility == Visibility.Gone)
+        {
             return;
         }
         _pos = rc;
@@ -1037,23 +1225,28 @@ class FilePathPanelButtons : WidgetGroupDefaultDrawing {
         int visibleItems = 0;
         bool exceeded = false;
         // measure and update visibility
-        for (int i = 0; i < _children.count; i++) {
+        for (int i = 0; i < _children.count; i++)
+        {
             Widget item = _children.get(i);
             item.visibility = Visibility.Visible;
             item.measure(rc.width, rc.height);
-            if (totalw + item.measuredWidth > rc.width) {
+            if (totalw + item.measuredWidth > rc.width)
+            {
                 exceeded = true;
             }
-            if (!exceeded || i == 0) { // at least one item must be visible
+            if (!exceeded || i == 0)
+            { // at least one item must be visible
                 totalw += item.measuredWidth;
                 visibleItems++;
-            } else
+            }
+            else
                 item.visibility = Visibility.Gone;
         }
         // layout visible items
         // backward order
         Rect itemRect = rc;
-        for (int i = visibleItems - 1; i >= 0; i--) {
+        for (int i = visibleItems - 1; i >= 0; i--)
+        {
             Widget item = _children.get(i);
             int w = item.measuredWidth;
             if (i == visibleItems - 1 && w > maxw)
@@ -1065,15 +1258,16 @@ class FilePathPanelButtons : WidgetGroupDefaultDrawing {
 
     }
 
-
 }
 
-interface PathSelectedHandler {
+interface PathSelectedHandler
+{
     bool onPathSelected(string path);
 }
 
 /// Panel - either path segment buttons or text editor line
-class FilePathPanel : FrameLayout {
+class FilePathPanel : FrameLayout
+{
     Listener!OnPathSelectionHandler onPathSelectionListener;
     static const ID_SEGMENTS = "SEGMENTS";
     static const ID_EDITOR = "ED_PATH";
@@ -1081,7 +1275,8 @@ class FilePathPanel : FrameLayout {
     protected EditLine _edPath;
     protected string _path;
     Signal!PathSelectedHandler pathListener;
-    this(string ID = null) {
+    this(string ID = null)
+    {
         super(ID);
         _segments = new FilePathPanelButtons(ID_SEGMENTS);
         _edPath = new EditLine(ID_EDITOR);
@@ -1094,55 +1289,70 @@ class FilePathPanel : FrameLayout {
         addChild(_edPath);
     }
 
-    void setDefaultPopupMenu() {
+    void setDefaultPopupMenu()
+    {
         _edPath.setDefaultPopupMenu();
     }
 
-    protected bool onEditorFocusChanged(Widget source, bool focused) {
-        if (!focused) {
+    protected bool onEditorFocusChanged(Widget source, bool focused)
+    {
+        if (!focused)
+        {
             _edPath.text = toUTF32(_path);
             showChild(ID_SEGMENTS);
         }
         return true;
     }
-    protected bool onPathSelected(string path) {
-        if (onPathSelectionListener.assigned) {
+
+    protected bool onPathSelected(string path)
+    {
+        if (onPathSelectionListener.assigned)
+        {
             if (exists(path))
                 return onPathSelectionListener(path);
         }
         return false;
     }
-    protected bool onSegmentsClickOutside(Widget w) {
+
+    protected bool onSegmentsClickOutside(Widget w)
+    {
         // switch to editor
         _edPath.text = toUTF32(_path);
         showChild(ID_EDITOR);
         _edPath.setFocus();
         return true;
     }
-    protected bool onEnterKey(EditWidgetBase editor) {
+
+    protected bool onEnterKey(EditWidgetBase editor)
+    {
         string fn = buildNormalizedPath(toUTF8(_edPath.text));
         if (exists(fn) && isDir(fn))
             onPathSelected(fn);
         return true;
     }
 
-    @property void path(string value) {
+    @property void path(string value)
+    {
         _segments.initialize(value);
         _edPath.text = toUTF32(value);
         _path = value;
         showChild(ID_SEGMENTS);
     }
-    @property string path() {
+
+    @property string path()
+    {
         return _path;
     }
 }
 
-class FileNameEditLine : HorizontalLayout {
+class FileNameEditLine : HorizontalLayout
+{
     protected EditLine _edFileName;
     protected Button _btn;
     protected string[string] _filetypeIcons;
     protected dstring _caption;
-    protected uint _fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable | FileDialogFlag.FileMustExist | FileDialogFlag.EnableCreateDirectory;
+    protected uint _fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable
+        | FileDialogFlag.FileMustExist | FileDialogFlag.EnableCreateDirectory;
     protected FileFilterEntry[] _filters;
     protected int _filterIndex;
 
@@ -1151,20 +1361,24 @@ class FileNameEditLine : HorizontalLayout {
     /// editor content is changed
     Signal!EditableContentChangeListener contentChange;
 
-    @property ref Signal!EditorActionHandler editorAction() {
+    @property ref Signal!EditorActionHandler editorAction()
+    {
         return _edFileName.editorAction;
     }
 
     /// handle Enter key press inside line editor
-    @property ref Signal!EnterKeyHandler enterKey() {
+    @property ref Signal!EnterKeyHandler enterKey()
+    {
         return _edFileName.enterKey;
     }
 
-    void setDefaultPopupMenu() {
+    void setDefaultPopupMenu()
+    {
         _edFileName.setDefaultPopupMenu();
     }
 
-    this(string ID = null) {
+    this(string ID = null)
+    {
         super(ID);
         _caption = UIString.fromId("TITLE_OPEN_FILE"c).value;
         _edFileName = new EditLine("FileNameEditLine_edFileName");
@@ -1174,23 +1388,29 @@ class FileNameEditLine : HorizontalLayout {
         _btn.styleId = STYLE_BUTTON_NOMARGINS;
         _btn.layoutWeight = 0;
         _btn.click = delegate(Widget src) {
-            FileDialog dlg = new FileDialog(UIString.fromRaw(_caption), window, null, _fileDialogFlags);
-            foreach(key, value; _filetypeIcons)
+            FileDialog dlg = new FileDialog(UIString.fromRaw(_caption), window,
+                    null, _fileDialogFlags);
+            foreach (key, value; _filetypeIcons)
                 dlg.filetypeIcons[key] = value;
             dlg.filters = _filters;
             dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-                if (result.id == ACTION_OPEN.id || result.id == ACTION_OPEN_DIRECTORY.id) {
+                if (result.id == ACTION_OPEN.id || result.id == ACTION_OPEN_DIRECTORY.id)
+                {
                     _edFileName.text = toUTF32(result.stringParam);
                     if (contentChange.assigned)
                         contentChange(_edFileName.content);
                 }
             };
             string path = toUTF8(_edFileName.text);
-            if (!path.empty) {
-                if (exists(path) && isFile(path)) {
+            if (!path.empty)
+            {
+                if (exists(path) && isFile(path))
+                {
                     dlg.path = dirName(path);
                     dlg.filename = baseName(path);
-                } else if (exists(path) && isDir(path)) {
+                }
+                else if (exists(path) && isDir(path))
+                {
                     dlg.path = path;
                 }
             }
@@ -1209,57 +1429,99 @@ class FileNameEditLine : HorizontalLayout {
         addChild(_btn);
     }
 
-    @property uint fileDialogFlags() { return _fileDialogFlags; }
-    @property void fileDialogFlags(uint f) { _fileDialogFlags = f; }
+    @property uint fileDialogFlags()
+    {
+        return _fileDialogFlags;
+    }
 
-    @property dstring caption() { return _caption; }
-    @property void caption(dstring s) { _caption = s; }
+    @property void fileDialogFlags(uint f)
+    {
+        _fileDialogFlags = f;
+    }
+
+    @property dstring caption()
+    {
+        return _caption;
+    }
+
+    @property void caption(dstring s)
+    {
+        _caption = s;
+    }
 
     /// returns widget content text (override to support this)
-    override @property dstring text() const { return _edFileName.text; }
+    override @property dstring text() const
+    {
+        return _edFileName.text;
+    }
     /// sets widget content text (override to support this)
-    override @property Widget text(dstring s) { _edFileName.text = s; return this; }
+    override @property Widget text(dstring s)
+    {
+        _edFileName.text = s;
+        return this;
+    }
     /// sets widget content text (override to support this)
-    override @property Widget text(UIString s) { _edFileName.text = s.value; return this; }
+    override @property Widget text(UIString s)
+    {
+        _edFileName.text = s.value;
+        return this;
+    }
 
     /// mapping of file extension to icon resource name, e.g. ".txt": "text-plain"
-    @property ref string[string] filetypeIcons() { return _filetypeIcons; }
+    @property ref string[string] filetypeIcons()
+    {
+        return _filetypeIcons;
+    }
 
     /// filter list for file type filter combo box
-    @property FileFilterEntry[] filters() {
+    @property FileFilterEntry[] filters()
+    {
         return _filters;
     }
 
     /// filter list for file type filter combo box
-    @property void filters(FileFilterEntry[] values) {
+    @property void filters(FileFilterEntry[] values)
+    {
         _filters = values;
     }
 
     /// add new filter entry
-    void addFilter(FileFilterEntry value) {
+    void addFilter(FileFilterEntry value)
+    {
         _filters ~= value;
     }
 
     /// filter index
-    @property int filterIndex() {
+    @property int filterIndex()
+    {
         return _filterIndex;
     }
 
     /// filter index
-    @property void filterIndex(int index) {
+    @property void filterIndex(int index)
+    {
         _filterIndex = index;
     }
 
-    @property bool readOnly() { return _edFileName.readOnly; }
-    @property void readOnly(bool f) { _edFileName.readOnly = f; }
+    @property bool readOnly()
+    {
+        return _edFileName.readOnly;
+    }
+
+    @property void readOnly(bool f)
+    {
+        _edFileName.readOnly = f;
+    }
 
 }
 
-class DirEditLine : FileNameEditLine {
-    this(string ID = null) {
+class DirEditLine : FileNameEditLine
+{
+    this(string ID = null)
+    {
         super(ID);
-        _fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable
-            | FileDialogFlag.FileMustExist | FileDialogFlag.SelectDirectory | FileDialogFlag.EnableCreateDirectory;
+        _fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable | FileDialogFlag.FileMustExist
+            | FileDialogFlag.SelectDirectory | FileDialogFlag.EnableCreateDirectory;
         _caption = UIString.fromId("ACTION_SELECT_DIRECTORY"c);
     }
 }

@@ -84,77 +84,90 @@ private import std.file;
    Set resource id (string) or plain unicode text (dstring) to it, and get dstring.
 
 */
-struct UIString {
+struct UIString
+{
     /** if not null, use it, otherwise lookup by id */
     private dstring _value;
     /** id to find value in translator */
     private string _id;
 
-    deprecated("use UIString.fromId() instead")
-    /** create string with i18n resource id */
-    this(string id) {
+    deprecated("use UIString.fromId() instead") /** create string with i18n resource id */
+    this(string id)
+    {
         _id = id;
     }
 
     /** create string with raw value; deprecated, use fromRaw() instead */
-    deprecated("use UIString.fromRaw() instead")
-    this(dstring value) {
+    deprecated("use UIString.fromRaw() instead") this(dstring value)
+    {
         _value = value;
     }
     /** create string with resource id and raw value as fallback for missing translations */
-    this(string id, dstring fallbackValue) {
+    this(string id, dstring fallbackValue)
+    {
         _id = id;
         _value = fallbackValue;
     }
 
-
     /// Returns string resource id
-    @property string id() const { return _id; }
+    @property string id() const
+    {
+        return _id;
+    }
     /// Sets string resource id
-    @property void id(string ID) {
+    @property void id(string ID)
+    {
         _id = ID;
         _value = null;
     }
     /** Get value (either raw or translated by id) */
-    @property dstring value() const {
+    @property dstring value() const
+    {
         if (_id !is null) // translate ID to dstring
             return i18n.get(_id, _value); // get from resource, use _value as fallback
         return _value;
     }
     /** Set raw value using property */
-    @property void value(dstring newValue) {
+    @property void value(dstring newValue)
+    {
         _value = newValue;
     }
     /** Assign raw value */
-    ref UIString opAssign(dstring rawValue) {
+    UIString opAssign(dstring rawValue)
+    {
         _value = rawValue;
         _id = null;
         return this;
     }
     /** Assign string resource id */
-    ref UIString opAssign(string ID) {
+    UIString opAssign(string ID)
+    {
         _id = ID;
         _value = null;
         return this;
     }
 
     /// returns true if string is empty: neither resource nor string is assigned
-    bool empty() const {
+    bool empty() const
+    {
         return _value.length == 0 && _id.length == 0;
     }
 
     /// create UIString from id - will be translated; fallback value can be provided for cases if translation is not found
-    static UIString fromId(string ID, dstring fallback = null) {
+    static UIString fromId(string ID, dstring fallback = null)
+    {
         return UIString(ID, fallback);
     }
 
     /// Create UIString from raw utf32 string value - will not be translated
-    static UIString fromRaw(dstring rawValue) {
+    static UIString fromRaw(dstring rawValue)
+    {
         return UIString(null, rawValue);
     }
 
     /// Create UIString from raw utf8 string value - will not be translated
-    static UIString fromRaw(string rawValue) {
+    static UIString fromRaw(string rawValue)
+    {
         return UIString(null, toUTF32(rawValue));
     }
 
@@ -167,159 +180,200 @@ struct UIString {
 
     Based on array.
 */
-struct UIStringCollection {
+struct UIStringCollection
+{
     private UIString[] _items;
     private int _length;
 
     /** Returns number of items */
-    @property int length() const { return _length; }
+    @property int length() const
+    {
+        return _length;
+    }
 
     /** Returns true if collection is empty */
-    @property bool empty() const { return _length == 0; }
+    @property bool empty() const
+    {
+        return _length == 0;
+    }
 
     /** Slice */
-    UIString[] opIndex() {
+    UIString[] opIndex()
+    {
         return _items[0 .. _length];
     }
     /** Slice */
-    UIString[] opSlice() {
+    UIString[] opSlice()
+    {
         return _items[0 .. _length];
     }
     /** Slice */
-    UIString[] opSlice(size_t start, size_t end) {
+    UIString[] opSlice(size_t start, size_t end)
+    {
         return _items[start .. end];
     }
     /** Read item by index */
-    UIString opIndex(size_t index) const {
+    UIString opIndex(size_t index) const
+    {
         return _items[index];
     }
     /** Modify item by index */
-    UIString opIndexAssign(UIString value, size_t index) {
+    UIString opIndexAssign(UIString value, size_t index)
+    {
         _items[index] = value;
         return _items[index];
     }
     /** Return unicode string for item by index */
-    dstring get(size_t index) const {
+    dstring get(size_t index) const
+    {
         return _items[index].value;
     }
     /** Assign UIStringCollection */
-    void opAssign(ref UIStringCollection items) {
+    void opAssign(ref UIStringCollection items)
+    {
         clear();
         addAll(items);
     }
     /** Append UIStringCollection */
-    void addAll(ref UIStringCollection items) {
-        foreach (UIString item; items) {
+    void addAll(ref UIStringCollection items)
+    {
+        foreach (UIString item; items)
+        {
             add(item);
         }
     }
     /** Assign array of string resource IDs */
-    void opAssign(string[] items) {
+    void opAssign(string[] items)
+    {
         clear();
         addAll(items);
     }
     /** Assign array of unicode strings */
-    void opAssign(dstring[] items) {
+    void opAssign(dstring[] items)
+    {
         clear();
         addAll(items);
     }
     /** Assign array of UIString */
-    void opAssign(UIString[] items) {
+    void opAssign(UIString[] items)
+    {
         clear();
         addAll(items);
     }
     /** Assign array of StringListValue */
-    void opAssign(StringListValue[] items) {
+    void opAssign(StringListValue[] items)
+    {
         clear();
         addAll(items);
     }
     /** Append array of unicode strings */
-    void addAll(dstring[] items) {
-        foreach (item; items) {
+    void addAll(dstring[] items)
+    {
+        foreach (item; items)
+        {
             add(item);
         }
     }
     /** Append array of unicode strings */
-    void addAll(string[] items) {
-        foreach (item; items) {
+    void addAll(string[] items)
+    {
+        foreach (item; items)
+        {
             add(item);
         }
     }
     /** Append array of unicode strings */
-    void addAll(UIString[] items) {
-        foreach (item; items) {
+    void addAll(UIString[] items)
+    {
+        foreach (item; items)
+        {
             add(item);
         }
     }
     /** Append array of unicode strings */
-    void addAll(StringListValue[] items) {
-        foreach (item; items) {
+    void addAll(StringListValue[] items)
+    {
+        foreach (item; items)
+        {
             add(item);
         }
     }
     /** Remove all items */
-    void clear() {
+    void clear()
+    {
         _items.length = 0;
         _length = 0;
     }
     /** Insert resource id item into specified position */
-    void add(string item, int index = -1) {
+    void add(string item, int index = -1)
+    {
         UIString s;
         s = item;
         add(s, index);
     }
     /** Insert unicode string item into specified position */
-    void add(dstring item, int index = -1) {
+    void add(dstring item, int index = -1)
+    {
         UIString s;
         s = item;
         add(s, index);
     }
     /** Insert StringListValue.label item into specified position */
-    void add(StringListValue item, int index = -1) {
+    void add(StringListValue item, int index = -1)
+    {
         add(item.label, index);
     }
     /** Insert UIString item into specified position */
-    void add(UIString item, int index = -1) {
+    void add(UIString item, int index = -1)
+    {
         if (index < 0 || index > _length)
             index = _length;
-        if (_items.length < _length + 1) {
+        if (_items.length < _length + 1)
+        {
             if (_items.length < 8)
                 _items.length = 8;
             else
                 _items.length = _items.length * 2;
         }
-        for (size_t i = _length; i > index; i--) {
+        for (size_t i = _length; i > index; i--)
+        {
             _items[i] = _items[i + 1];
         }
         _items[index] = item;
         _length++;
     }
     /** Remove item with specified index */
-    void remove(int index) {
+    void remove(int index)
+    {
         if (index < 0 || index >= _length)
             return;
-        foreach(i; index .. _length - 1)
+        foreach (i; index .. _length - 1)
             _items[i] = _items[i + 1];
         _length--;
     }
     /** Return index of first item with specified text or -1 if not found. */
-    int indexOf(dstring str) const {
-        foreach(i; 0 .. _length) {
+    int indexOf(dstring str) const
+    {
+        foreach (i; 0 .. _length)
+        {
             if (_items[i].value.equal(str))
                 return i;
         }
         return -1;
     }
     /** Return index of first item with specified string resource id or -1 if not found. */
-    int indexOf(string strId) const {
-        foreach(i; 0 .. _length) {
+    int indexOf(string strId) const
+    {
+        foreach (i; 0 .. _length)
+        {
             if (_items[i].id.equal(strId))
                 return i;
         }
         return -1;
     }
     /** Return index of first item with specified string or -1 if not found. */
-    int indexOf(UIString str) const {
+    int indexOf(UIString str) const
+    {
         if (str.id !is null)
             return indexOf(str.id);
         return indexOf(str.value);
@@ -327,7 +381,8 @@ struct UIStringCollection {
 }
 
 /// string values string list adapter - each item can have optional string or integer id, and optional icon resource id
-struct StringListValue {
+struct StringListValue
+{
     /// integer id for item
     int intId;
     /// string id for item
@@ -337,45 +392,58 @@ struct StringListValue {
     /// label to show for item
     UIString label;
 
-    this(string id, dstring name, string iconId = null) {
+    this(string id, dstring name, string iconId = null)
+    {
         this.stringId = id;
         this.label.value = name;
         this.iconId = iconId;
     }
-    this(string id, string nameResourceId, string iconId = null) {
+
+    this(string id, string nameResourceId, string iconId = null)
+    {
         this.stringId = id;
         this.label.id = nameResourceId;
         this.iconId = iconId;
     }
-    this(int id, dstring name, string iconId = null) {
+
+    this(int id, dstring name, string iconId = null)
+    {
         this.intId = id;
         this.label.value = name;
         this.iconId = iconId;
     }
-    this(int id, string nameResourceId, string iconId = null) {
+
+    this(int id, string nameResourceId, string iconId = null)
+    {
         this.intId = id;
         this.label.id = nameResourceId;
         this.iconId = iconId;
     }
-    this(dstring name, string iconId = null) {
+
+    this(dstring name, string iconId = null)
+    {
         this.label.value = name;
         this.iconId = iconId;
     }
 }
 
 /** UI Strings internationalization translator */
-class UIStringTranslator {
+class UIStringTranslator
+{
 
     private UIStringList _main;
     private UIStringList _fallback;
     private string[] _resourceDirs;
 
     /** Looks for i18n directory inside one of passed dirs, and uses first found as directory to read i18n files from */
-    void findTranslationsDir(string[] dirs ...) {
+    void findTranslationsDir(string[] dirs...)
+    {
         _resourceDirs.length = 0;
-        foreach(dir; dirs) {
+        foreach (dir; dirs)
+        {
             string path = appendPath(dir, "i18n/");
-            if (exists(path) && isDir(path)) {
+            if (exists(path) && isDir(path))
+            {
                 Log.i("Adding i18n dir ", path);
                 _resourceDirs ~= path;
             }
@@ -383,29 +451,34 @@ class UIStringTranslator {
     }
 
     /** Convert resource path - append resource dir if necessary */
-    string[] convertResourcePaths(string filename) {
+    string[] convertResourcePaths(string filename)
+    {
         if (filename is null)
             return null;
         bool hasPathDelimiters = false;
-        foreach(char ch; filename)
+        foreach (char ch; filename)
             if (ch == '/' || ch == '\\')
                 hasPathDelimiters = true;
         string[] res;
-        if (!hasPathDelimiters) {
+        if (!hasPathDelimiters)
+        {
             string fn = EMBEDDED_RESOURCE_PREFIX ~ "std_" ~ filename;
-            string s = cast(string)loadResourceBytes(fn);
+            string s = cast(string) loadResourceBytes(fn);
             if (s)
                 res ~= fn;
             fn = EMBEDDED_RESOURCE_PREFIX ~ filename;
-            s = cast(string)loadResourceBytes(fn);
+            s = cast(string) loadResourceBytes(fn);
             if (s)
                 res ~= fn;
-            foreach (dir; _resourceDirs) {
+            foreach (dir; _resourceDirs)
+            {
                 fn = dir ~ filename;
                 if (exists(fn) && isFile(fn))
                     res ~= fn;
             }
-        } else {
+        }
+        else
+        {
             // full path
             res ~= filename;
         }
@@ -413,24 +486,28 @@ class UIStringTranslator {
     }
 
     /// create empty translator
-    this() {
+    this()
+    {
         _main = new UIStringList();
         _fallback = new UIStringList();
     }
 
     /** Load translation file(s) */
-    bool load(string mainFilename, string fallbackFilename = null) {
+    bool load(string mainFilename, string fallbackFilename = null)
+    {
         _main.clear();
         _fallback.clear();
         bool res = _main.load(convertResourcePaths(mainFilename));
-        if (fallbackFilename !is null) {
+        if (fallbackFilename !is null)
+        {
             res = _fallback.load(convertResourcePaths(fallbackFilename)) || res;
         }
         return res;
     }
 
     /** Translate string ID to string (returns "UNTRANSLATED: id" for missing values) */
-    dstring get(string id, dstring fallbackValue = null) {
+    dstring get(string id, dstring fallbackValue = null)
+    {
         if (id is null)
             return null;
         dstring s = _main.get(id);
@@ -446,39 +523,49 @@ class UIStringTranslator {
 }
 
 /** UI string translator */
-private class UIStringList {
+private class UIStringList
+{
     private dstring[string] _map;
     /// remove all items
-    void clear() {
+    void clear()
+    {
         _map.destroy();
     }
     /// set item value
-    void set(string id, dstring value) {
+    void set(string id, dstring value)
+    {
         _map[id] = value;
     }
     /// get item value, null if translation is not found for id
-    dstring get(string id) const {
+    dstring get(string id) const
+    {
         if (id in _map)
             return _map[id];
         return null;
     }
     /// load strings from stream
-    bool load(dstring[] lines) {
+    bool load(dstring[] lines)
+    {
         int count = 0;
-        foreach (s; lines) {
+        foreach (s; lines)
+        {
             int eqpos = -1;
             int firstNonspace = -1;
             int lastNonspace = -1;
             for (int i = 0; i < s.length; i++)
-                if (s[i] == '=') {
+                if (s[i] == '=')
+                {
                     eqpos = i;
                     break;
-                } else if (s[i] != ' ' && s[i] != '\t') {
+                }
+                else if (s[i] != ' ' && s[i] != '\t')
+                {
                     if (firstNonspace == -1)
                         firstNonspace = i;
                     lastNonspace = i;
                 }
-            if (eqpos > 0 && firstNonspace != -1) {
+            if (eqpos > 0 && firstNonspace != -1)
+            {
                 string id = toUTF8(s[firstNonspace .. lastNonspace + 1]);
                 dstring value = s[eqpos + 1 .. $].dup;
                 set(id, value);
@@ -489,7 +576,8 @@ private class UIStringList {
     }
 
     /// convert to utf32 and split by lines (detecting line endings)
-    static dstring[] splitLines(string src) {
+    static dstring[] splitLines(string src)
+    {
         dstring dsrc = toUTF32(src);
         dstring[] split1 = split(dsrc, "\r\n");
         dstring[] split2 = split(dsrc, "\r");
@@ -502,19 +590,25 @@ private class UIStringList {
     }
 
     /// load strings from file (utf8, id=value lines)
-    bool load(string[] filenames) {
+    bool load(string[] filenames)
+    {
         clear();
         bool res = false;
-        foreach(filename; filenames) {
-            try {
+        foreach (filename; filenames)
+        {
+            try
+            {
                 debug Log.d("Loading string resources from file ", filename);
-                string s = cast(string)loadResourceBytes(filename);
-                if (!s) {
+                string s = cast(string) loadResourceBytes(filename);
+                if (!s)
+                {
                     Log.e("Cannot load i18n resource from file ", filename);
                     continue;
                 }
                 res = load(splitLines(s)) || res;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Log.e("Cannot read string resources from file ", filename);
             }
         }
@@ -528,8 +622,10 @@ private class UIStringList {
 /** Global UI translator object */
 private UIStringTranslator _i18n;
 
-@property UIStringTranslator i18n() {
-    if (!_i18n) {
+@property UIStringTranslator i18n()
+{
+    if (!_i18n)
+    {
         _i18n = new UIStringTranslator();
     }
     return _i18n;
