@@ -99,9 +99,9 @@ static if (BACKEND_GUI) {
 }
 import dlangui.graphics.colors;
 import dlangui.graphics.drawbuf;
+import dlangui.core.xml;
 import std.file;
 import std.algorithm;
-import std.xml;
 import std.conv;
 import std.string;
 import std.path;

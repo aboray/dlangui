@@ -23,12 +23,11 @@ Authors:   Vadim Lopatin, coolreader.org@gmail.com
 */
 module dlangui.widgets.styles;
 
-import dlangui.core.config;
-
-private import std.xml;
 private import std.string;
 private import std.algorithm;
 
+import dlangui.core.config;
+import dlangui.core.xml;
 import dlangui.core.types;
 import dlangui.graphics.colors;
 import dlangui.graphics.fonts;
